@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartAgri – Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/app.css"/>
+  <style>
+    /* Graphique mini-barres */
+    .bar-chart { display:flex; align-items:flex-end; gap:6px; height:80px; padding-top:8px; }
+    .bar-col   { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+    .bar       { width:100%; border-radius:4px 4px 0 0; background:var(--green-300);
+                 transition:height .5s cubic-bezier(.34,1.56,.64,1); min-height:4px; }
+    .bar:hover { background:var(--green-500); }
+    .bar-label { font-size:.65rem; color:var(--gray-400); white-space:nowrap; }
+    .bar-val   { font-size:.68rem; font-weight:600; color:var(--green-700); }
+
+    /* Météo cards */
+    .meteo-strip { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+    .meteo-day {
+      flex:0 0 90px; text-align:center; padding:12px 8px;
+      background:var(--gray-50); border:1px solid var(--gray-200);
+      border-radius:var(--radius-md);
+    }
+    .meteo-day.today { background:var(--green-50); border-color:var(--green-300); }
+    .meteo-day-name { font-size:.72rem; color:var(--gray-400); margin-bottom:4px; font-weight:500; }
+    .meteo-day-icon { font-size:1.6rem; line-height:1; margin-bottom:4px; }
+    .meteo-day-temp { font-size:.9rem; font-weight:700; color:var(--gray-900); }
+    .meteo-day-rain { font-size:.72rem; color:#3b82f6; margin-top:2px; }
+
+    /* Quick actions */
+    .quick-actions { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+    .qa-btn {
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      padding:18px 12px; background:var(--white);
+      border:2px solid var(--gray-200); border-radius:var(--radius-lg);
+      cursor:pointer; font-family:var(--font); transition:all .18s;
+      text-decoration:none;
+    }
+    .qa-btn:hover { border-color:var(--green-300); background:var(--green-50); transform:translateY(-2px); box-shadow:var(--shadow-md); }
+    .qa-icon { font-size:1.8rem; }
+    .qa-label { font-size:.8rem; font-weight:600; color:var(--gray-700); text-align:center; }
+
+    /* Activité récente */
+    .activity-list { display:flex; flex-direction:column; }
+    .activity-item {
+      display:flex; align-items:flex-start; gap:12px;
+      padding:12px 0; border-bottom:1px solid var(--gray-100);
+    }
+    .activity-item:last-child { border-bottom:none; }
+    .activity-dot {
+      width:34px; height:34px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; font-size:.9rem;
+    }
+    .activity-body { flex:1; min-width:0; }
+    .activity-title { font-size:.87rem; font-weight:500; color:var(--gray-900); }
+    .activity-time  { font-size:.75rem; color:var(--gray-400); margin-top:2px; }
+
+    /* Progression cultures */
+    .culture-list { display:flex; flex-direction:column; gap:14px; }
+    .culture-item { display:flex; align-items:center; gap:12px; }
+    .culture-icon { font-size:1.3rem; width:32px; text-align:center; flex-shrink:0; }
+    .culture-info { flex:1; min-width:0; }
+    .culture-name { font-size:.85rem; font-weight:600; color:var(--gray-800); }
+    .culture-progress-wrap { display:flex; align-items:center; gap:8px; margin-top:4px; }
+    .culture-bar-bg { flex:1; height:6px; background:var(--gray-200); border-radius:3px; overflow:hidden; }
+    .culture-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--green-300),var(--green-500)); transition:width .8s cubic-bezier(.34,1.56,.64,1); }
+    .culture-pct { font-size:.75rem; font-weight:600; color:var(--green-700); min-width:32px; text-align:right; }
+
+    @media(max-width:900px){.quick-actions{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:480px){.quick-actions{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+
+<!-- ══ TOPBAR ══ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" id="menu-toggle" aria-label="Menu">☰</button>
+    <a href="dashboard.html" class="topbar-logo"><span class="leaf">🌱</span>SmartAgri</a>
+  </div>
+  <div class="topbar-right">
+    <button class="notif-btn" title="Notifications" aria-label="Notifications">
+      🔔<span class="notif-badge"></span>
+    </button>
+    <div class="avatar-wrap">
+      <div class="avatar" id="topbar-avatar" tabindex="0" role="button" aria-haspopup="true">JD</div>
+      <div class="dropdown" id="user-dropdown" role="menu">
+        <div class="dropdown-header">
+          <strong id="drop-name">Jean Diallo</strong>
+          <span id="drop-email">demo@smartagri.com</span>
+          <span id="drop-role" style="font-size:.72rem;color:var(--green-500);font-weight:600;margin-top:2px;display:block;"></span>
+        </div>
+        <a href="dashboard.html">👤 Mon profil</a>
+        <a href="#" onclick="alert('Paramètres à venir')">⚙️ Paramètres</a>
+        <button class="logout" id="btn-logout">🚪 Déconnexion</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">Navigation</div>
+  <a class="nav-link active" href="dashboard.html"  data-page="dashboard"><span class="icon">📊</span>Dashboard</a>
+  <a class="nav-link" href="parcelles.html"          data-page="parcelles"><span class="icon">🗺️</span>Mes parcelles</a>
+  <a class="nav-link" href="prediction.html"         data-page="prediction"><span class="icon">🔮</span>Prédiction IA</a>
+  <a class="nav-link" href="meteo.html"              data-page="meteo"><span class="icon">🌦️</span>Météo</a>
+  <a class="nav-link" href="agribot.html"            data-page="agribot"><span class="icon">👵🏻​</span>AgriBot<span class="nav-badge">IA</span></a>
+  <div class="sidebar-section">Compte</div>
+  <button class="nav-link" onclick="Auth.logout()" data-page="logout" style="background:none;border:none;cursor:pointer;font-family:inherit;width:100%;text-align:left;"><span class="icon">🚪</span>Déconnexion</button>
+</nav>
+
+<!-- ══ CONTENU ══ -->
+<main class="main-content">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1 id="welcome-msg">Bonjour, Jean 👋</h1>
+      <p id="date-label">Chargement...</p>
+    </div>
+    <a href="prediction.html" class="btn btn-primary">
+      🔮 Nouvelle prédiction
+    </a>
+  </div>
+
+  <!-- Actions rapides -->
+  <div class="quick-actions">
+    <a class="qa-btn" href="parcelles.html">
+      <span class="qa-icon">🗺️</span><span class="qa-label">Mes parcelles</span>
+    </a>
+    <a class="qa-btn" href="prediction.html">
+      <span class="qa-icon">🔮</span><span class="qa-label">Prédire rendement</span>
+    </a>
+    <a class="qa-btn" href="meteo.html">
+      <span class="qa-icon">🌦️</span><span class="qa-label">Voir la météo</span>
+    </a>
+    <a class="qa-btn" href="agribot.html">
+      <span class="qa-icon">👵🏻​</span><span class="qa-label">Parler à AgriBot</span>
+    </a>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon-wrap green">🗺️</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-parcelles">–</div>
+        <div class="stat-label">Parcelles actives</div>
+        <div class="stat-trend neutral" id="trend-parcelles">Chargement...</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon-wrap orange">🌾</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-rendement">–</div>
+        <div class="stat-label">Rendement moyen prédit</div>
+        <div class="stat-trend up" id="trend-rendement">↑ En hausse</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon-wrap blue">🌡️</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-temp">–</div>
+        <div class="stat-label">Température actuelle</div>
+        <div class="stat-trend neutral" id="trend-temp">Dakar</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon-wrap purple">🔮</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-predictions">–</div>
+        <div class="stat-label">Prédictions effectuées</div>
+        <div class="stat-trend neutral">Total</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grille principale -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+
+    <!-- Météo -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🌦️ Prévisions météo – Yamoussoukro</span>
+        <a href="meteo.html" class="btn btn-ghost btn-sm">Voir tout →</a>
+      </div>
+      <div class="meteo-strip" id="meteo-strip">
+        <div class="skeleton" style="height:90px;flex:0 0 90px;border-radius:10px;"></div>
+        <div class="skeleton" style="height:90px;flex:0 0 90px;border-radius:10px;"></div>
+        <div class="skeleton" style="height:90px;flex:0 0 90px;border-radius:10px;"></div>
+        <div class="skeleton" style="height:90px;flex:0 0 90px;border-radius:10px;"></div>
+        <div class="skeleton" style="height:90px;flex:0 0 90px;border-radius:10px;"></div>
+      </div>
+    </div>
+
+    <!-- Graphique rendements -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📊 Rendements prédits (t/ha)</span>
+        <a href="prediction.html" class="btn btn-ghost btn-sm">Historique →</a>
+      </div>
+      <div class="bar-chart" id="bar-chart">
+        <div class="skeleton" style="height:60px;flex:1;border-radius:4px;"></div>
+        <div class="skeleton" style="height:40px;flex:1;border-radius:4px;"></div>
+        <div class="skeleton" style="height:70px;flex:1;border-radius:4px;"></div>
+        <div class="skeleton" style="height:50px;flex:1;border-radius:4px;"></div>
+        <div class="skeleton" style="height:65px;flex:1;border-radius:4px;"></div>
+      </div>
+      <p style="font-size:.75rem;color:var(--gray-400);text-align:center;margin-top:8px;">5 dernières prédictions</p>
+    </div>
+
+  </div>
+
+  <!-- Grille secondaire -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+    <!-- Progression des cultures -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🌱 Mes cultures en cours</span>
+        <a href="parcelles.html" class="btn btn-ghost btn-sm">Gérer →</a>
+      </div>
+      <div class="culture-list" id="culture-list">
+        <div class="empty-state">
+          <div class="empty-state-icon">🌾</div>
+          <h3>Aucune parcelle</h3>
+          <p>Ajoutez vos premières parcelles</p>
+          <a href="parcelles.html" class="btn btn-primary btn-sm">+ Ajouter</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activité récente -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🕐 Activité récente</span>
+      </div>
+      <div class="activity-list" id="activity-list">
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--green-100);">🌱</div>
+          <div class="activity-body">
+            <div class="activity-title">Bienvenue sur SmartAgri !</div>
+            <div class="activity-time">Aujourd'hui</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<div id="toast-container"></div>
+
+<script src="../assets/js/api.js"></script>
+<script>
+/* ── Vérif auth ── */
+requireAuth();
+initTopbar();
+setActiveNav('dashboard');
+
+/* ── Date ── */
+const now = new Date();
+const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+document.getElementById('date-label').textContent =
+  now.toLocaleDateString('fr-FR', opts);
+
+/* ── Message de bienvenue ── */
+const user = Auth.getUser();
+if (user) {
+  document.getElementById('welcome-msg').textContent =
+    `Bonjour, ${user.firstname} 👋`;
+}
+
+/* ── Charger la météo ── */
+async function loadMeteo() {
+  try {
+    const [current, previsions] = await Promise.all([
+      ApiMeteo.current('Abidjan'),
+      ApiMeteo.previsions('Abidjan'),
+    ]);
+
+    // Stat température
+    document.getElementById('stat-temp').textContent = `${current.temperature}°C`;
+      document.getElementById('trend-temp').textContent =
+      `${current.description} · ${current.ville}`;
+
+    // Strip météo
+    const strip = document.getElementById('meteo-strip');
+    strip.innerHTML = '';
+    previsions.previsions.forEach((day, i) => {
+      const icon = meteoIcon(day.icone);
+      strip.innerHTML += `
+        <div class="meteo-day ${i === 0 ? 'today' : ''}">
+          <div class="meteo-day-name">${day.label}</div>
+          <div class="meteo-day-icon">${icon}</div>
+          <div class="meteo-day-temp">${day.temp}°C</div>
+          <div class="meteo-day-rain">💧 ${day.pluie} mm</div>
+        </div>`;
+    });
+  } catch (e) {
+    document.getElementById('meteo-strip').innerHTML =
+      '<p style="color:var(--gray-400);font-size:.85rem;">Météo indisponible</p>';
+  }
+}
+
+/* ── Charger les parcelles ── */
+async function loadParcelles() {
+  try {
+    const parcelles = await ApiParcelles.list();
+    document.getElementById('stat-parcelles').textContent = parcelles.length;
+    document.getElementById('trend-parcelles').textContent =
+      parcelles.length > 0 ? `${parcelles.length} parcelle(s)` : 'Aucune parcelle';
+
+    const cultureList = document.getElementById('culture-list');
+    const icons = { mais:'🌽', riz:'🌾', arachide:'🥜', sorgho:'🌿', mil:'🌿', coton:'☁️', manioc:'🥔' };
+    const statuts = { active:'En cours', en_repos:'En repos', recoltee:'Récoltée' };
+    const pcts = { active:65, en_repos:30, recoltee:100 };
+
+    if (parcelles.length === 0) {
+      cultureList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🌾</div>
+          <h3>Aucune parcelle</h3>
+          <p>Ajoutez votre première parcelle</p>
+          <a href="parcelles.html" class="btn btn-primary btn-sm">+ Ajouter</a>
+        </div>`;
+      return;
+    }
+
+    cultureList.innerHTML = parcelles.slice(0, 4).map(p => {
+      const pct = pcts[p.statut] || 50;
+      return `
+        <div class="culture-item">
+          <span class="culture-icon">${icons[p.culture] || '🌱'}</span>
+          <div class="culture-info">
+            <div class="culture-name">${p.nom} <span class="badge badge-green" style="font-size:.68rem;">${p.culture}</span></div>
+            <div class="culture-progress-wrap">
+              <div class="culture-bar-bg">
+                <div class="culture-bar-fill" style="width:0%" data-pct="${pct}"></div>
+              </div>
+              <span class="culture-pct">${pct}%</span>
+            </div>
+            <div style="font-size:.72rem;color:var(--gray-400);margin-top:2px;">${p.superficie} ha · ${statuts[p.statut] || p.statut}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Animer les barres
+    setTimeout(() => {
+      document.querySelectorAll('.culture-bar-fill').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+      });
+    }, 100);
+
+    // Activité
+    const actList = document.getElementById('activity-list');
+    actList.innerHTML = parcelles.slice(0, 4).map(p => `
+      <div class="activity-item">
+        <div class="activity-dot" style="background:var(--green-100);">${icons[p.culture] || '🌱'}</div>
+        <div class="activity-body">
+          <div class="activity-title">Parcelle <strong>${p.nom}</strong> – ${p.culture}</div>
+          <div class="activity-time">${formatDateShort(p.created_at)}</div>
+        </div>
+      </div>`).join('');
+
+  } catch(e) {
+    document.getElementById('stat-parcelles').textContent = '–';
+  }
+}
+
+/* ── Charger les prédictions ── */
+async function loadPredictions() {
+  try {
+    const preds = await ApiPrediction.historique();
+    document.getElementById('stat-predictions').textContent = preds.length;
+
+    if (preds.length > 0) {
+      const avg = preds.reduce((s, p) => s + p.rendement_predit, 0) / preds.length;
+      document.getElementById('stat-rendement').textContent = avg.toFixed(1) + ' t/ha';
+    }
+
+    // Graphique barres
+    const chart = document.getElementById('bar-chart');
+    if (preds.length === 0) {
+      chart.innerHTML = `<div class="empty-state" style="width:100%;padding:20px 0;">
+        <p style="color:var(--gray-400);font-size:.82rem;">Aucune prédiction encore</p>
+      </div>`;
+      return;
+    }
+
+    const last5  = preds.slice(0, 5).reverse();
+    const maxVal = Math.max(...last5.map(p => p.rendement_predit), 1);
+    const cultureIcons = { mais:'🌽', riz:'🌾', arachide:'🥜', sorgho:'🌿', mil:'🌿', coton:'☁️', manioc:'🥔' };
+
+    chart.innerHTML = last5.map(p => {
+      const pct = (p.rendement_predit / maxVal) * 100;
+      return `
+        <div class="bar-col">
+          <span class="bar-val">${p.rendement_predit}</span>
+          <div class="bar" style="height:${Math.max(pct * 0.7, 4)}px"
+               title="${p.culture} – ${p.rendement_predit} t/ha"></div>
+          <span class="bar-label">${cultureIcons[p.culture] || '🌱'}</span>
+        </div>`;
+    }).join('');
+
+  } catch(e) {
+    document.getElementById('stat-predictions').textContent = '0';
+  }
+}
+
+/* ── Init ── */
+loadMeteo();
+loadParcelles();
+loadPredictions();
+</script>
+</body>
+</html>

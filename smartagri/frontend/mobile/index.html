@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="theme-color" content="#2d6a4f"/>
+  <title>SmartAgri Mobile</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.svg"/>
+  <link rel="icon" type="image/svg+xml" href="icon-192.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- ══ SPLASH SCREEN ══ -->
+  <div id="splash">
+    <div class="splash-inner">
+      <div class="splash-logo">🌱</div>
+      <div class="splash-name">SmartAgri</div>
+      <div class="splash-sub">L'agriculture intelligente</div>
+      <div class="splash-loader">
+        <div class="splash-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ APP SHELL ══ -->
+  <div id="app" style="display:none;">
+
+    <!-- Topbar -->
+    <header class="topbar" id="topbar">
+      <div class="topbar-left">
+        <button class="back-btn" id="back-btn" style="display:none;" onclick="goBack()">
+          &#8592;
+        </button>
+        <div class="topbar-logo" id="topbar-logo">
+          <span>🌱</span><span>SmartAgri</span>
+        </div>
+        <div class="topbar-page-title" id="topbar-title" style="display:none;"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="notif-btn" onclick="showPage('notifications')">🔔</button>
+        <div class="avatar" id="topbar-avatar" onclick="showPage('profil')">JD</div>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <main class="pages-container" id="pages-container">
+
+      <!-- ═══ PAGE : ACCUEIL ═══ -->
+      <section class="page active" id="page-accueil">
+        <div class="page-scroll">
+
+          <!-- Bandeau météo -->
+          <div class="meteo-banner" id="meteo-banner" onclick="showPage('meteo')">
+            <div class="meteo-banner-left">
+              <span class="meteo-icon" id="mb-icon">🌤️</span>
+              <div>
+                <div class="meteo-temp" id="mb-temp">–°C</div>
+                <div class="meteo-desc" id="mb-desc">Chargement...</div>
+              </div>
+            </div>
+            <div class="meteo-banner-right">
+              <div class="meteo-city" id="mb-city">Dakar</div>
+              <div class="meteo-arrow">›</div>
+            </div>
+          </div>
+
+          <!-- Salutation -->
+          <div class="greeting-section">
+            <h1 class="greeting" id="greeting">Bonjour 👋</h1>
+            <p class="greeting-sub" id="greeting-date">Chargement...</p>
+          </div>
+
+          <!-- Actions rapides -->
+          <div class="section-title">Actions rapides</div>
+          <div class="quick-grid">
+            <button class="quick-card" onclick="showPage('prediction')">
+              <span class="qc-icon">🔮</span>
+              <span class="qc-label">Prédire rendement</span>
+            </button>
+            <button class="quick-card" onclick="showPage('parcelles')">
+              <span class="qc-icon">🗺️</span>
+              <span class="qc-label">Mes parcelles</span>
+            </button>
+            <button class="quick-card" onclick="showPage('agribot')">
+              <span class="qc-icon">👵🏻</span>
+              <span class="qc-label">AgriBot IA</span>
+            </button>
+            <button class="quick-card" onclick="showPage('meteo')">
+              <span class="qc-icon">🌦️</span>
+              <span class="qc-label">Météo</span>
+            </button>
+          </div>
+
+          <!-- Stats résumé -->
+          <div class="section-title">Mes statistiques</div>
+          <div class="stats-row">
+            <div class="stat-pill">
+              <span class="sp-icon">🗺️</span>
+              <div class="sp-info">
+                <span class="sp-val" id="stat-parcelles">–</span>
+                <span class="sp-lbl">Parcelles</span>
+              </div>
+            </div>
+            <div class="stat-pill">
+              <span class="sp-icon">🔮</span>
+              <div class="sp-info">
+                <span class="sp-val" id="stat-preds">–</span>
+                <span class="sp-lbl">Prédictions</span>
+              </div>
+            </div>
+            <div class="stat-pill">
+              <span class="sp-icon">🌾</span>
+              <div class="sp-info">
+                <span class="sp-val" id="stat-rendement">–</span>
+                <span class="sp-lbl">t/ha moy.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mes parcelles récentes -->
+          <div class="section-header">
+            <div class="section-title" style="margin:0;">Parcelles récentes</div>
+            <button class="see-all-btn" onclick="showPage('parcelles')">Tout voir</button>
+          </div>
+          <div id="parcelles-preview"></div>
+
+          <!-- Dernière prédiction -->
+          <div class="section-title">Dernière prédiction</div>
+          <div id="last-prediction"></div>
+
+          <div style="height:20px;"></div>
+        </div>
+      </section>
+
+      <!-- ═══ PAGE : PARCELLES ═══ -->
+      <section class="page" id="page-parcelles">
+        <div class="page-scroll">
+          <div class="page-action-bar">
+            <div class="search-bar">
+              <span>🔍</span>
+              <input type="text" id="m-search" placeholder="Rechercher..." oninput="filterMParcelles()"/>
+            </div>
+            <button class="fab-inline" onclick="openAddParcelle()">+</button>
+          </div>
+
+          <div class="filter-chips" id="filter-chips">
+            <button class="chip active" data-f="all"       onclick="setMFilter('all',this)">Toutes</button>
+            <button class="chip"        data-f="active"    onclick="setMFilter('active',this)">Actives</button>
+            <button class="chip"        data-f="mais"      onclick="setMFilter('mais',this)">🌽 Maïs</button>
+            <button class="chip"        data-f="riz"       onclick="setMFilter('riz',this)">🌾 Riz</button>
+            <button class="chip"        data-f="arachide"  onclick="setMFilter('arachide',this)">🥜 Arachide</button>
+          </div>
+
+          <div id="m-parcelles-list"></div>
+          <div style="height:80px;"></div>
+        </div>
+
+        <!-- FAB -->
+        <button class="fab" onclick="openAddParcelle()">+</button>
+      </section>
+
+      <!-- ═══ PAGE : PRÉDICTION ═══ -->
+      <section class="page" id="page-prediction">
+        <div class="page-scroll">
+
+          <!-- Résultat (affiché en haut quand disponible) -->
+          <div id="pred-result-card" style="display:none;" class="pred-result-card">
+            <div class="prc-label">Rendement prédit</div>
+            <div class="prc-value" id="prc-value">–</div>
+            <div class="prc-unit">tonnes / hectare</div>
+            <div class="prc-culture" id="prc-culture"></div>
+            <div class="prc-conf">
+              <span>Confiance</span>
+              <div class="prc-conf-bar"><div class="prc-conf-fill" id="prc-conf-fill"></div></div>
+              <span id="prc-conf-val">–%</span>
+            </div>
+            <div id="prc-tips"></div>
+          </div>
+
+          <!-- Formulaire -->
+          <div class="m-card">
+            <div class="m-card-title">⚙️ Paramètres de la parcelle</div>
+
+            <!-- Charger depuis parcelle -->
+            <div class="m-field">
+              <label>Charger depuis une parcelle</label>
+              <select id="m-sel-parcelle" class="m-select" onchange="mPrefill()">
+                <option value="">Sélectionner une parcelle…</option>
+              </select>
+            </div>
+
+            <div class="m-field">
+              <label>Culture *</label>
+              <div class="m-select-wrap">
+                <select id="m-culture" class="m-select">
+                  <option value="">Choisir…</option>
+                  <option value="mais">🌽 Maïs</option>
+                  <option value="riz">🌾 Riz</option>
+                  <option value="arachide">🥜 Arachide</option>
+                  <option value="sorgho">🌿 Sorgho</option>
+                  <option value="mil">🌿 Mil</option>
+                  <option value="coton">☁️ Coton</option>
+                  <option value="manioc">🥔 Manioc</option>
+                </select>
+              </div>
+              <span class="m-err" id="err-m-culture"></span>
+            </div>
+
+            <div class="m-field">
+              <label>Type de sol *</label>
+              <div class="m-select-wrap">
+                <select id="m-sol" class="m-select">
+                  <option value="">Choisir…</option>
+                  <option value="sableux">Sableux</option>
+                  <option value="argileux">Argileux</option>
+                  <option value="limoneux">Limoneux</option>
+                  <option value="lateritique">Latéritique</option>
+                </select>
+              </div>
+              <span class="m-err" id="err-m-sol"></span>
+            </div>
+
+            <div class="m-field">
+              <label>Superficie (ha) *</label>
+              <input type="number" id="m-superficie" class="m-input" value="1" min="0.1" step="0.1"/>
+              <span class="m-err" id="err-m-sup"></span>
+            </div>
+
+            <!-- Sliders -->
+            <div class="m-slider-field">
+              <div class="m-slider-row">
+                <label>💧 Pluviométrie</label>
+                <span class="m-slider-val" id="v-pluv">450 mm</span>
+              </div>
+              <input type="range" id="m-pluv" min="0" max="2000" value="450" step="10"
+                     oninput="document.getElementById('v-pluv').textContent=this.value+' mm'"/>
+              <div class="m-slider-hints"><span>0 mm</span><span>Optimum ~600</span><span>2000 mm</span></div>
+            </div>
+
+            <div class="m-slider-field">
+              <div class="m-slider-row">
+                <label>🌡️ Température</label>
+                <span class="m-slider-val" id="v-temp">26 °C</span>
+              </div>
+              <input type="range" id="m-temp" min="10" max="45" value="26" step="0.5"
+                     oninput="document.getElementById('v-temp').textContent=this.value+' °C'"/>
+              <div class="m-slider-hints"><span>10°C</span><span>Optimal ~26°C</span><span>45°C</span></div>
+            </div>
+
+            <div class="m-slider-field">
+              <div class="m-slider-row">
+                <label>🌿 Engrais</label>
+                <span class="m-slider-val" id="v-engrais">50 kg/ha</span>
+              </div>
+              <input type="range" id="m-engrais" min="0" max="200" value="50" step="5"
+                     oninput="document.getElementById('v-engrais').textContent=this.value+' kg/ha'"/>
+              <div class="m-slider-hints"><span>Sans</span><span>~50 kg/ha</span><span>200 kg/ha</span></div>
+            </div>
+
+            <button class="m-btn-primary" id="m-btn-predict" onclick="mPredict()">
+              🔮 Lancer la prédiction
+            </button>
+          </div>
+
+          <!-- Historique compact -->
+          <div class="m-card">
+            <div class="m-card-title">🕐 Historique</div>
+            <div id="m-pred-history"></div>
+          </div>
+
+          <div style="height:80px;"></div>
+        </div>
+      </section>
+
+      <!-- ═══ PAGE : AGRIBOT ═══ -->
+      <section class="page" id="page-agribot">
+        <div class="chat-page">
+
+          <!-- Suggestions -->
+          <div class="suggest-strip" id="suggest-strip">
+            <button class="sug-chip" onclick="mSuggest('Engrais pour le maïs ?')">🌽 Engrais maïs</button>
+            <button class="sug-chip" onclick="mSuggest('Période de semis du riz ?')">🌾 Semis riz</button>
+            <button class="sug-chip" onclick="mSuggest('Maladies de l\'arachide ?')">🥜 Maladies</button>
+            <button class="sug-chip" onclick="mSuggest('Comment améliorer mon sol ?')">🌍 Sol</button>
+            <button class="sug-chip" onclick="mSuggest('Besoin en irrigation du maïs ?')">💧 Irrigation</button>
+            <button class="sug-chip" onclick="mSuggest('Résistance à la sécheresse ?')">🌵 Sécheresse</button>
+          </div>
+
+          <!-- Messages -->
+          <div class="chat-messages" id="m-chat-messages"></div>
+
+          <!-- Input -->
+          <div class="chat-input-bar">
+            <button class="chat-clear-btn" onclick="mClearChat()" title="Effacer">🗑️</button>
+            <textarea class="chat-input" id="m-chat-input" rows="1"
+                      placeholder="Posez votre question…"
+                      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();mSend();}"
+                      oninput="mAutoResize(this)"></textarea>
+            <button class="chat-send-btn" id="m-send-btn" onclick="mSend()">➤</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ PAGE : MÉTÉO ═══ -->
+      <section class="page" id="page-meteo">
+        <div class="page-scroll">
+
+          <!-- Ville search -->
+          <div class="m-search-bar-full">
+            <span>📍</span>
+            <input type="text" id="m-ville-input" placeholder="Rechercher une ville…"
+                   onkeydown="if(event.key==='Enter') mLoadVille(this.value.trim(), null)"/>
+            <button onclick="mLoadVille(document.getElementById('m-ville-input').value.trim(), null)">→</button>
+          </div>
+
+          <!-- Villes rapides -->
+          <div class="filter-chips">
+            <button class="chip active" onclick="mLoadVille('Dakar',this)">Dakar</button>
+            <button class="chip" onclick="mLoadVille('Thiès',this)">Thiès</button>
+            <button class="chip" onclick="mLoadVille('Saint-Louis',this)">St-Louis</button>
+            <button class="chip" onclick="mLoadVille('Ziguinchor',this)">Ziguinchor</button>
+            <button class="chip" onclick="mLoadVille('Kaolack',this)">Kaolack</button>
+          </div>
+
+          <!-- Carte météo principale -->
+          <div class="meteo-hero-card" id="m-meteo-hero">
+            <div class="mhc-loading">Chargement…</div>
+          </div>
+
+          <!-- Prévisions 6 jours -->
+          <div class="section-title">Prévisions 6 jours</div>
+          <div class="m-prev-list" id="m-prev-list"></div>
+
+          <!-- Conseils agro -->
+          <div class="section-title">Conseils agricoles</div>
+          <div id="m-agro-tips"></div>
+
+          <div style="height:80px;"></div>
+        </div>
+      </section>
+
+      <!-- ═══ PAGE : PROFIL ═══ -->
+      <section class="page" id="page-profil">
+        <div class="page-scroll">
+          <div class="profil-header">
+            <div class="profil-avatar" id="prof-avatar">JD</div>
+            <div class="profil-name" id="prof-name">Jean Diallo</div>
+            <div class="profil-role" id="prof-role">Agriculteur</div>
+            <div class="profil-email" id="prof-email">demo@smartagri.com</div>
+          </div>
+
+          <div class="m-card" style="margin-top:16px;">
+            <div class="m-card-title">📊 Mon activité</div>
+            <div class="profil-stats">
+              <div class="pstat"><span class="pstat-val" id="ps-parcelles">–</span><span class="pstat-lbl">Parcelles</span></div>
+              <div class="pstat"><span class="pstat-val" id="ps-preds">–</span><span class="pstat-lbl">Prédictions</span></div>
+              <div class="pstat"><span class="pstat-val" id="ps-msgs">–</span><span class="pstat-lbl">Messages AgriBot</span></div>
+            </div>
+          </div>
+
+          <div class="menu-list">
+            <button class="menu-item" onclick="alert('Paramètres à venir')">
+              <span class="mi-icon">⚙️</span>
+              <span class="mi-label">Paramètres</span>
+              <span class="mi-arrow">›</span>
+            </button>
+            <button class="menu-item" onclick="showPage('parcelles')">
+              <span class="mi-icon">🗺️</span>
+              <span class="mi-label">Mes parcelles</span>
+              <span class="mi-arrow">›</span>
+            </button>
+            <button class="menu-item" onclick="showPage('prediction')">
+              <span class="mi-icon">🔮</span>
+              <span class="mi-label">Mes prédictions</span>
+              <span class="mi-arrow">›</span>
+            </button>
+            <button class="menu-item" onclick="switchToWeb()">
+              <span class="mi-icon">🖥️</span>
+              <span class="mi-label">Version Web complète</span>
+              <span class="mi-arrow">›</span>
+            </button>
+            <button class="menu-item" onclick="window.location.href='telecharger.html'">
+              <span class="mi-icon">📲</span>
+              <span class="mi-label">Installer l'application</span>
+              <span class="mi-arrow">›</span>
+            </button>
+            <button class="menu-item danger" onclick="mLogout()">
+              <span class="mi-icon">🚪</span>
+              <span class="mi-label">Se déconnecter</span>
+              <span class="mi-arrow">›</span>
+            </button>
+          </div>
+
+          <div style="height:80px;"></div>
+        </div>
+      </section>
+
+      <!-- ═══ PAGE : NOTIFICATIONS ═══ -->
+      <section class="page" id="page-notifications">
+        <div class="page-scroll">
+          <div class="m-card">
+            <div class="m-card-title">🔔 Notifications</div>
+            <div class="notif-list" id="notif-list">
+              <div class="notif-item unread">
+                <span class="notif-icon">🌱</span>
+                <div class="notif-body">
+                  <div class="notif-title">Bienvenue sur SmartAgri !</div>
+                  <div class="notif-time">Aujourd'hui</div>
+                </div>
+              </div>
+              <div class="notif-item">
+                <span class="notif-icon">🌦️</span>
+                <div class="notif-body">
+                  <div class="notif-title">Pluies prévues dans 2 jours</div>
+                  <div class="notif-time">Hier</div>
+                </div>
+              </div>
+              <div class="notif-item">
+                <span class="notif-icon">🔮</span>
+                <div class="notif-body">
+                  <div class="notif-title">Nouvelle prédiction disponible</div>
+                  <div class="notif-time">Il y a 2 jours</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:80px;"></div>
+        </div>
+      </section>
+
+      <!-- ═══ DRAWER : Ajouter une parcelle ═══ -->
+      <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()" style="display:none;"></div>
+      <div class="drawer" id="parcelle-drawer" style="transform:translateY(100%);">
+        <div class="drawer-handle"></div>
+        <div class="drawer-header">
+          <h3 id="drawer-title">Nouvelle parcelle</h3>
+          <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        </div>
+        <div class="drawer-body">
+          <input type="hidden" id="d-edit-id"/>
+          <div id="drawer-alert" class="m-alert" style="display:none;"></div>
+
+          <div class="m-field">
+            <label>Nom de la parcelle *</label>
+            <input type="text" id="d-nom" class="m-input" placeholder="Ex: Parcelle Nord"/>
+            <span class="m-err" id="derr-nom"></span>
+          </div>
+          <div class="two-fields">
+            <div class="m-field">
+              <label>Superficie (ha) *</label>
+              <input type="number" id="d-sup" class="m-input" placeholder="2.5" step="0.1" min="0.1"/>
+              <span class="m-err" id="derr-sup"></span>
+            </div>
+            <div class="m-field">
+              <label>Statut</label>
+              <select id="d-statut" class="m-select">
+                <option value="active">Active</option>
+                <option value="en_repos">En repos</option>
+                <option value="recoltee">Récoltée</option>
+              </select>
+            </div>
+          </div>
+          <div class="two-fields">
+            <div class="m-field">
+              <label>Culture *</label>
+              <select id="d-culture" class="m-select">
+                <option value="">Choisir…</option>
+                <option value="mais">🌽 Maïs</option>
+                <option value="riz">🌾 Riz</option>
+                <option value="arachide">🥜 Arachide</option>
+                <option value="sorgho">🌿 Sorgho</option>
+                <option value="mil">🌿 Mil</option>
+                <option value="coton">☁️ Coton</option>
+                <option value="manioc">🥔 Manioc</option>
+              </select>
+              <span class="m-err" id="derr-culture"></span>
+            </div>
+            <div class="m-field">
+              <label>Type de sol *</label>
+              <select id="d-sol" class="m-select">
+                <option value="">Choisir…</option>
+                <option value="sableux">Sableux</option>
+                <option value="argileux">Argileux</option>
+                <option value="limoneux">Limoneux</option>
+                <option value="lateritique">Latéritique</option>
+              </select>
+              <span class="m-err" id="derr-sol"></span>
+            </div>
+          </div>
+          <div class="m-field">
+            <label>Ville / Zone</label>
+            <input type="text" id="d-ville" class="m-input" placeholder="Ex: Thiès"/>
+          </div>
+          <div class="m-field">
+            <label>Description</label>
+            <textarea id="d-desc" class="m-input" rows="2" placeholder="Notes optionnelles…"></textarea>
+          </div>
+
+          <button class="m-btn-primary" id="d-save-btn" onclick="saveMParcelle()">
+            Enregistrer
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ══ BOTTOM NAVIGATION ══ -->
+    <nav class="bottom-nav">
+      <button class="bnav-item active" data-page="accueil" onclick="showPage('accueil')">
+        <span class="bnav-icon">🏠</span>
+        <span class="bnav-label">Accueil</span>
+      </button>
+      <button class="bnav-item" data-page="parcelles" onclick="showPage('parcelles')">
+        <span class="bnav-icon">🗺️</span>
+        <span class="bnav-label">Parcelles</span>
+      </button>
+      <button class="bnav-item" data-page="prediction" onclick="showPage('prediction')">
+        <span class="bnav-icon">🔮</span>
+        <span class="bnav-label">Prédiction</span>
+      </button>
+      <button class="bnav-item" data-page="agribot" onclick="showPage('agribot')">
+        <span class="bnav-icon">👵🏻</span>
+        <span class="bnav-label">AgriBot</span>
+      </button>
+      <button class="bnav-item" data-page="profil" onclick="showPage('profil')">
+        <span class="bnav-icon">👤</span>
+        <span class="bnav-label">Profil</span>
+      </button>
+    </nav>
+
+    <!-- Toast container -->
+    <div id="m-toast-container"></div>
+
+  </div><!-- /#app -->
+
+  <script src="../app/assets/js/api.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // ── Enregistrer le Service Worker pour PWA offline ──
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW enregistré', reg.scope))
+          .catch(err => console.log('SW erreur', err));
+      });
+    }
+    // ── Détection installation PWA ──
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Afficher un bouton d'installation si disponible
+      setTimeout(() => {
+        const btn = document.getElementById('pwa-install-btn');
+        if (btn) btn.style.display = 'flex';
+      }, 2000);
+    });
+    window.addEventListener('appinstalled', () => {
+      console.log('App installée avec succès');
+      const btn = document.getElementById('pwa-install-btn');
+      if (btn) btn.style.display = 'none';
+    });
+  </script>
+</body>
+</html>

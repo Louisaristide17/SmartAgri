@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartAgri – Météo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/app.css"/>
+  <style>
+    /* ── Hero météo ── */
+    .meteo-hero {
+      background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
+      color:#fff; border-radius:var(--radius-xl); padding:28px 32px;
+      margin-bottom:20px; position:relative; overflow:hidden;
+    }
+    .meteo-hero::before {
+      content:''; position:absolute; right:-60px; top:-60px;
+      width:240px; height:240px; border-radius:50%;
+      background:rgba(255,255,255,.06);
+    }
+    .meteo-hero-top {
+      display:flex; align-items:flex-start; justify-content:space-between;
+      margin-bottom:20px; flex-wrap:wrap; gap:14px;
+    }
+    .hero-location { display:flex; flex-direction:column; gap:3px; }
+    .hero-city     { font-size:1.25rem; font-weight:700; }
+    .hero-source   { font-size:.72rem; opacity:.6; }
+    .meteo-search  {
+      display:flex; gap:8px; align-items:center;
+      background:rgba(255,255,255,.15); border-radius:999px; padding:5px 8px 5px 14px;
+    }
+    .meteo-search input {
+      background:transparent; border:none; outline:none;
+      color:#fff; font-family:var(--font); font-size:.88rem; width:150px;
+    }
+    .meteo-search input::placeholder { color:rgba(255,255,255,.55); }
+    .meteo-search-btn {
+      background:rgba(255,255,255,.22); border:none; border-radius:999px;
+      padding:5px 13px; color:#fff; cursor:pointer; font-family:var(--font);
+      font-size:.82rem; transition:background .18s;
+    }
+    .meteo-search-btn:hover { background:rgba(255,255,255,.32); }
+
+    /* ── Météo actuelle ── */
+    .meteo-main { display:flex; align-items:center; gap:24px; margin-bottom:20px; }
+    .current-icon { font-size:5rem; line-height:1; }
+    .current-temp { font-size:4.5rem; font-weight:800; line-height:1; }
+    .current-details-col { display:flex; flex-direction:column; gap:4px; }
+    .current-desc  { font-size:1rem; opacity:.9; font-weight:500; }
+    .current-sub   { font-size:.84rem; opacity:.65; }
+
+    /* ── Métriques détaillées ── */
+    .meteo-metrics {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+      background:rgba(255,255,255,.08); border-radius:12px; padding:14px;
+    }
+    .metric { text-align:center; }
+    .metric-val   { font-size:1.1rem; font-weight:700; }
+    .metric-lbl   { font-size:.7rem; opacity:.65; margin-top:2px; }
+    .metric-icon  { font-size:1rem; margin-bottom:2px; }
+
+    /* ── Source badge ── */
+    .source-badge {
+      display:inline-flex; align-items:center; gap:5px;
+      background:rgba(255,255,255,.15); border-radius:999px;
+      padding:3px 10px; font-size:.72rem; margin-bottom:16px;
+    }
+    .source-dot { width:6px; height:6px; border-radius:50%; background:#22c55e; }
+
+    /* ── Prévisions 7 jours ── */
+    .prev-strip {
+      display:grid; grid-template-columns:repeat(7,1fr);
+      gap:10px; margin-bottom:20px;
+    }
+    .prev-day {
+      background:var(--white); border:1px solid var(--gray-200);
+      border-radius:var(--radius-lg); padding:12px 6px; text-align:center;
+      box-shadow:var(--shadow-sm); transition:all .18s; cursor:default;
+    }
+    .prev-day:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+    .prev-day.today { border-color:var(--green-300); background:var(--green-50); }
+    .prev-label  { font-size:.68rem; font-weight:700; color:var(--gray-500);
+                   text-transform:uppercase; margin-bottom:6px; }
+    .prev-icon   { font-size:1.6rem; margin-bottom:4px; }
+    .prev-temps  { font-size:.82rem; font-weight:600; color:var(--gray-900); }
+    .prev-temps .tmin { color:var(--gray-400); font-weight:400; }
+    .prev-rain   {
+      font-size:.7rem; color:#3b82f6; margin-top:4px;
+      display:flex; align-items:center; justify-content:center; gap:2px;
+    }
+    .prev-prob   { font-size:.68rem; color:var(--gray-400); margin-top:2px; }
+
+    /* Barre d'irrigation */
+    .prev-etp-bar {
+      height:3px; background:var(--gray-100); border-radius:2px; margin-top:5px; overflow:hidden;
+    }
+    .prev-etp-fill { height:100%; background:#f97316; border-radius:2px; }
+
+    /* ── Résumé agronomique 7j ── */
+    .agro-summary {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+      margin-bottom:20px;
+    }
+    .agro-sum-card {
+      background:var(--white); border:1px solid var(--gray-200);
+      border-radius:var(--radius-lg); padding:16px 18px;
+      display:flex; align-items:center; gap:12px;
+      box-shadow:var(--shadow-sm);
+    }
+    .agro-sum-icon { font-size:1.8rem; flex-shrink:0; }
+    .agro-sum-val  { font-size:1.3rem; font-weight:700; color:var(--gray-900); }
+    .agro-sum-lbl  { font-size:.75rem; color:var(--gray-500); }
+    .agro-sum-sub  { font-size:.72rem; color:var(--green-700); font-weight:600; margin-top:2px; }
+
+    /* ── Bouton prédire depuis météo ── */
+    .predict-from-meteo {
+      background:var(--green-50); border:1.5px solid var(--green-300);
+      border-radius:var(--radius-md); padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:20px; flex-wrap:wrap;
+    }
+    .pfm-text strong { font-size:.9rem; color:var(--green-700); }
+    .pfm-text p      { font-size:.8rem; color:var(--gray-500); margin-top:2px; }
+
+    /* ── Conseils agronomiques ── */
+    .agro-tips { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
+    .agro-tip  {
+      background:var(--white); border:1px solid var(--gray-200);
+      border-radius:var(--radius-md); padding:14px;
+      display:flex; gap:12px; align-items:flex-start;
+    }
+    .agro-tip-icon { font-size:1.4rem; flex-shrink:0; }
+    .agro-tip h4   { font-size:.85rem; font-weight:600; color:var(--gray-900); margin-bottom:3px; }
+    .agro-tip p    { font-size:.78rem; color:var(--gray-500); line-height:1.5; }
+
+    /* ── Villes rapides ── */
+    .villes-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center; }
+    .ville-btn  {
+      padding:5px 13px; border-radius:999px; border:1.5px solid var(--gray-300);
+      background:var(--white); font-family:var(--font); font-size:.8rem;
+      font-weight:500; color:var(--gray-600); cursor:pointer; transition:all .15s;
+    }
+    .ville-btn:hover, .ville-btn.active {
+      border-color:var(--green-500); background:var(--green-50); color:var(--green-700);
+    }
+
+    @media(max-width:900px) { .prev-strip{grid-template-columns:repeat(4,1fr);} }
+    @media(max-width:600px) {
+      .prev-strip{grid-template-columns:repeat(2,1fr);}
+      .meteo-metrics{grid-template-columns:repeat(2,1fr);}
+      .agro-summary{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" id="menu-toggle">☰</button>
+    <a href="dashboard.html" class="topbar-logo"><span class="leaf">🌱</span>SmartAgri</a>
+  </div>
+  <div class="topbar-right">
+    <div class="avatar-wrap">
+      <div class="avatar" id="topbar-avatar" tabindex="0">JD</div>
+      <div class="dropdown" id="user-dropdown">
+        <div class="dropdown-header">
+          <strong id="drop-name"></strong><span id="drop-email"></span>
+          <span id="drop-role" style="font-size:.72rem;color:var(--green-500);font-weight:600;margin-top:2px;display:block;"></span>
+        </div>
+        <a href="dashboard.html">📊 Dashboard</a>
+        <button class="logout" id="btn-logout">🚪 Déconnexion</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">Navigation</div>
+  <a class="nav-link" href="dashboard.html"  data-page="dashboard"><span class="icon">📊</span>Dashboard</a>
+  <a class="nav-link" href="parcelles.html"  data-page="parcelles"><span class="icon">🗺️</span>Mes parcelles</a>
+  <a class="nav-link" href="prediction.html" data-page="prediction"><span class="icon">🔮</span>Prédiction IA</a>
+  <a class="nav-link active" href="meteo.html" data-page="meteo"><span class="icon">🌦️</span>Météo</a>
+  <a class="nav-link" href="agribot.html"    data-page="agribot"><span class="icon">👵🏻​</span>AgriBot<span class="nav-badge">IA</span></a>
+  <div class="sidebar-section">Compte</div>
+  <button class="nav-link" onclick="Auth.logout()" data-page="logout" style="background:none;border:none;cursor:pointer;font-family:inherit;width:100%;text-align:left;"><span class="icon">🚪</span>Déconnexion</button>
+</nav>
+
+<main class="main-content">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>🌦️ Météo Agricole</h1>
+      <p id="header-sub">Données temps réel · Open-Meteo</p>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="loadVille(currentVille, null)" title="Actualiser">
+      ↺ Actualiser
+    </button>
+  </div>
+
+  <!-- Villes rapides -->
+  <div class="villes-bar">
+    <span style="font-size:.78rem;color:var(--gray-400);font-weight:600;">🇨🇮 Côte d'Ivoire :</span>
+    <button class="ville-btn active" data-ville="Abidjan"       onclick="loadVille('Abidjan',       this)">📍 Abidjan</button>
+    <button class="ville-btn"        data-ville="Yamoussoukro"  onclick="loadVille('Yamoussoukro',  this)">Yamoussoukro</button>
+    <button class="ville-btn"        data-ville="Bouaké"        onclick="loadVille('Bouaké',        this)">Bouaké</button>
+    <button class="ville-btn"        data-ville="Daloa"         onclick="loadVille('Daloa',         this)">Daloa</button>
+    <button class="ville-btn"        data-ville="San-Pédro"     onclick="loadVille('San-Pédro',     this)">San-Pédro</button>
+    <button class="ville-btn"        data-ville="Korhogo"       onclick="loadVille('Korhogo',       this)">Korhogo</button>
+    <button class="ville-btn"        data-ville="Man"           onclick="loadVille('Man',           this)">Man</button>
+    <button class="ville-btn"        data-ville="Gagnoa"        onclick="loadVille('Gagnoa',        this)">Gagnoa</button>
+  </div>
+
+  <!-- Hero météo -->
+  <div class="meteo-hero" id="meteo-hero">
+    <div class="meteo-hero-top">
+      <div class="hero-location">
+        <div class="hero-city" id="hero-city">Chargement…</div>
+        <div class="hero-source" id="hero-source">Open-Meteo (temps réel)</div>
+      </div>
+      <div class="meteo-search">
+        <input type="text" id="search-ville" placeholder="Autre ville…"
+               onkeydown="if(event.key==='Enter') searchVille()"/>
+        <button class="meteo-search-btn" onclick="searchVille()">🔍</button>
+      </div>
+    </div>
+
+    <div class="meteo-main">
+      <div class="current-icon" id="hero-icon">🌤️</div>
+      <div class="current-temp" id="hero-temp">–</div>
+      <div class="current-details-col">
+        <div class="current-desc" id="hero-desc">–</div>
+        <div class="current-sub"  id="hero-ressenti">–</div>
+        <div class="current-sub"  id="hero-date" style="margin-top:4px;"></div>
+      </div>
+    </div>
+
+    <div class="meteo-metrics">
+      <div class="metric">
+        <div class="metric-icon">💧</div>
+        <div class="metric-val" id="m-hum">–</div>
+        <div class="metric-lbl">Humidité</div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon">🌬️</div>
+        <div class="metric-val" id="m-vent">–</div>
+        <div class="metric-lbl">Vent km/h</div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon">💨</div>
+        <div class="metric-val" id="m-rafales">–</div>
+        <div class="metric-lbl">Rafales km/h</div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon">🌧️</div>
+        <div class="metric-val" id="m-precip">–</div>
+        <div class="metric-lbl">Précipitations</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prévisions 7 jours -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <span class="card-title">📅 Prévisions 7 jours</span>
+      <span class="badge badge-green" id="source-badge">Open-Meteo</span>
+    </div>
+    <div class="prev-strip" id="prev-strip">
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-lg);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-lg);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-lg);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-lg);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-lg);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-lg);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-lg);"></div>
+    </div>
+  </div>
+
+  <!-- Résumé agronomique 7j -->
+  <div class="agro-summary" id="agro-summary" style="display:none;">
+    <div class="agro-sum-card">
+      <div class="agro-sum-icon">🌧️</div>
+      <div>
+        <div class="agro-sum-val" id="sum-pluie7">– mm</div>
+        <div class="agro-sum-lbl">Pluie totale sur 7 jours</div>
+        <div class="agro-sum-sub" id="sum-pluie-mois">≈ – mm/mois estimé</div>
+      </div>
+    </div>
+    <div class="agro-sum-card">
+      <div class="agro-sum-icon">🌡️</div>
+      <div>
+        <div class="agro-sum-val" id="sum-temp">– °C</div>
+        <div class="agro-sum-lbl">Température moyenne</div>
+        <div class="agro-sum-sub" id="sum-temp-conseil"></div>
+      </div>
+    </div>
+    <div class="agro-sum-card">
+      <div class="agro-sum-icon">💦</div>
+      <div>
+        <div class="agro-sum-val" id="sum-etp">– mm/j</div>
+        <div class="agro-sum-lbl">Évapotranspiration moy.</div>
+        <div class="agro-sum-sub">Besoin en irrigation estimé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouton prédire avec données météo -->
+  <div class="predict-from-meteo" id="pfm-box" style="display:none;">
+    <div class="pfm-text">
+      <strong>🔮 Prédire le rendement avec ces données météo</strong>
+      <p>La température et la pluviométrie seront pré-remplies automatiquement.</p>
+    </div>
+    <a id="pfm-link" href="prediction.html" class="btn btn-primary btn-sm">
+      Lancer la prédiction →
+    </a>
+  </div>
+
+  <!-- Conseils agronomiques -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🌱 Conseils agronomiques du jour</span>
+      <span style="font-size:.78rem;color:var(--gray-400);" id="conseil-date"></span>
+    </div>
+    <div class="agro-tips" id="agro-tips">
+      <div class="skeleton" style="height:80px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:80px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:80px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:80px;border-radius:var(--radius-md);"></div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast-container"></div>
+
+<script src="../assets/js/api.js"></script>
+<script>
+requireAuth();
+initTopbar();
+setActiveNav('meteo');
+
+let currentVille     = 'Dakar';
+let currentMeteoData = null;   // données courantes pour le lien prédiction
+
+/* ── Charger météo d'une ville ── */
+async function loadVille(ville, btn) {
+  currentVille = ville;
+  document.querySelectorAll('.ville-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  // Skeleton pendant le chargement
+  document.getElementById('hero-city').textContent = 'Chargement…';
+  document.getElementById('agro-summary').style.display = 'none';
+  document.getElementById('pfm-box').style.display      = 'none';
+
+  try {
+    const [current, previsions] = await Promise.all([
+      ApiMeteo.current(ville),
+      ApiMeteo.previsions(ville),
+    ]);
+
+    currentMeteoData = { current, previsions };
+    renderCurrent(current);
+    renderPrevisions(previsions);
+    renderAgroSummary(current, previsions);
+    updateAgroTips(current, previsions.previsions);
+    buildPredictLink(current, previsions);
+
+    document.getElementById('header-sub').textContent =
+      `Données temps réel · ${current.source || 'Open-Meteo'}`;
+
+  } catch(e) {
+    showToast('Erreur météo : ' + e.message, 'error');
+    document.getElementById('hero-city').textContent = 'Erreur de chargement';
+  }
+}
+
+/* ── Rendu météo actuelle ── */
+function renderCurrent(c) {
+  document.getElementById('hero-city').textContent     = c.ville;
+  document.getElementById('hero-source').textContent   = c.source || 'Open-Meteo';
+  document.getElementById('hero-temp').textContent     = c.temperature + '°C';
+  document.getElementById('hero-desc').textContent     = c.description;
+  document.getElementById('hero-icon').textContent     = meteoIcon(c.icone);
+  document.getElementById('hero-ressenti').textContent = `Ressenti ${c.ressenti}°C · Pression ${c.pression} hPa`;
+  document.getElementById('hero-date').textContent     =
+    new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('m-hum').textContent         = c.humidite + '%';
+  document.getElementById('m-vent').textContent        = c.vent;
+  document.getElementById('m-rafales').textContent     = (c.rafales || c.vent) + '';
+  document.getElementById('m-precip').textContent      = (c.precipitations !== undefined ? c.precipitations : '–') + ' mm';
+}
+
+/* ── Rendu prévisions ── */
+function renderPrevisions(prev) {
+  const strip  = document.getElementById('prev-strip');
+  const source = prev.source || 'Open-Meteo';
+  document.getElementById('source-badge').textContent = source;
+
+  strip.innerHTML = prev.previsions.map((d, i) => {
+    const etpPct  = Math.min(100, (d.etp / 10) * 100);
+    const probStr = d.prob_pluie !== undefined ? `${d.prob_pluie}% pluie` : '';
+    return `
+      <div class="prev-day ${i === 0 ? 'today' : ''}">
+        <div class="prev-label">${d.label}</div>
+        <div class="prev-icon">${meteoIcon(d.icone)}</div>
+        <div class="prev-temps">
+          ${d.temp_max !== undefined ? `${d.temp_max}° ` : `${d.temp}°`}
+          ${d.temp_min !== undefined ? `<span class="tmin">/ ${d.temp_min}°</span>` : ''}
+        </div>
+        <div class="prev-rain">💧 ${d.pluie} mm</div>
+        ${probStr ? `<div class="prev-prob">${probStr}</div>` : ''}
+        ${d.etp !== undefined ? `
+          <div class="prev-etp-bar" title="Évapotranspiration ${d.etp} mm">
+            <div class="prev-etp-fill" style="width:${etpPct}%"></div>
+          </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+/* ── Résumé agronomique ── */
+function renderAgroSummary(current, prev) {
+  const sum    = document.getElementById('agro-summary');
+  const pluie7 = prev.total_pluie_7j;
+  const pluieMois = prev.pluie_mensuelle_estimee;
+
+  // Température moyenne des prévisions
+  const tempsMoy = prev.previsions.reduce((s, d) => s + (d.temp || d.temp_max || 0), 0) / prev.previsions.length;
+
+  // ETP moyenne
+  const etpMoy = prev.previsions.reduce((s, d) => s + (d.etp || 5), 0) / prev.previsions.length;
+
+  document.getElementById('sum-pluie7').textContent     = pluie7 + ' mm';
+  document.getElementById('sum-pluie-mois').textContent = `≈ ${pluieMois} mm/mois estimé`;
+  document.getElementById('sum-temp').textContent       = tempsMoy.toFixed(1) + ' °C';
+  document.getElementById('sum-etp').textContent        = etpMoy.toFixed(1) + ' mm/j';
+
+  const conseil = tempsMoy > 35
+    ? '⚠️ Chaleur élevée — irrigation critique'
+    : tempsMoy > 28
+    ? '✅ Conditions favorables'
+    : '🌿 Températures fraîches — risque de croissance lente';
+  document.getElementById('sum-temp-conseil').textContent = conseil;
+
+  sum.style.display = 'grid';
+}
+
+/* ── Bouton prédire avec données météo ── */
+function buildPredictLink(current, prev) {
+  const pluieMois = prev.pluie_mensuelle_estimee || 0;
+  const temp      = current.temperature;
+  const ville     = encodeURIComponent(current.ville);
+  const link = `prediction.html?pluv=${pluieMois}&temp=${temp}&ville=${ville}&source=meteo`;
+  document.getElementById('pfm-link').href = link;
+  document.getElementById('pfm-box').style.display = 'flex';
+}
+
+/* ── Conseils agronomiques dynamiques ── */
+function updateAgroTips(current, previsions) {
+  const now = new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('conseil-date').textContent = now;
+
+  const totalPluie  = previsions.slice(0,3).reduce((s,d)=>s+d.pluie,0);
+  const totalPluie7 = previsions.reduce((s,d)=>s+d.pluie,0);
+  const tempMoy     = previsions.reduce((s,d)=>s+(d.temp||d.temp_max||28),0)/previsions.length;
+
+  const tips = [];
+
+  // Température
+  if (current.temperature > 38)
+    tips.push({icon:'🌡️',title:'Canicule agricole',
+      text:`${current.temperature}°C est dangereux pour les cultures. Arrosez impérativement tôt le matin. Couvrez les semis délicats.`});
+  else if (current.temperature > 33)
+    tips.push({icon:'🌡️',title:'Chaleur intense',
+      text:`${current.temperature}°C. Privilégiez les arrosages en soirée. Les cultures comme le riz et le maïs peuvent souffrir.`});
+  else if (current.temperature > 26)
+    tips.push({icon:'✅',title:'Température optimale',
+      text:`${current.temperature}°C — Idéal pour maïs, riz, arachide. Bonnes conditions de croissance.`});
+  else
+    tips.push({icon:'🌿',title:'Températures fraîches',
+      text:`${current.temperature}°C. Le mil et le sorgho s'adaptent bien. Retardez les semis du riz si possible.`});
+
+  // Pluviométrie prévisions
+  if (totalPluie > 80)
+    tips.push({icon:'🌧️',title:'Fortes pluies (3 prochains jours)',
+      text:`${totalPluie.toFixed(0)} mm attendus. Vérifiez le drainage. Évitez les épandages d'engrais. Risque de lessivage des sols.`});
+  else if (totalPluie > 30)
+    tips.push({icon:'🌦️',title:'Pluies modérées favorables',
+      text:`${totalPluie.toFixed(0)} mm prévus sur 3 jours. Excellent pour l'implantation des cultures et la levée des semis.`});
+  else if (totalPluie > 5)
+    tips.push({icon:'🌂',title:'Pluies légères',
+      text:`${totalPluie.toFixed(0)} mm. Insuffisant pour les cultures pluviales. Irrigation complémentaire recommandée.`});
+  else
+    tips.push({icon:'☀️',title:'Temps sec prévu',
+      text:`Moins de 5 mm sur 3 jours. Programmez une irrigation. Paillez vos parcelles pour limiter l'évaporation.`});
+
+  // Humidité
+  if (current.humidite > 80)
+    tips.push({icon:'🦠',title:'Risque fongique élevé',
+      text:`Humidité à ${current.humidite}%. Surveillez pyriculariose (riz), cercosporiose (arachide), mildious. Traitements préventifs conseillés.`});
+  else if (current.humidite > 60)
+    tips.push({icon:'💧',title:'Humidité satisfaisante',
+      text:`${current.humidite}% — Bonnes conditions pour la plupart des cultures. Risque fongique modéré.`});
+  else
+    tips.push({icon:'🏜️',title:'Air sec — risque de stress hydrique',
+      text:`Humidité à ${current.humidite}%. Augmentez la fréquence d'irrigation. Paillez les parcelles sensibles.`});
+
+  // Vent
+  if (current.vent > 30)
+    tips.push({icon:'💨',title:'Vents forts',
+      text:`${current.vent} km/h. Évitez absolument les pulvérisations. Tuteurez les plants fragiles. Risque de verse pour maïs et sorgho.`});
+  else if (current.vent < 10)
+    tips.push({icon:'🌿',title:'Conditions calmes — traitements possibles',
+      text:`Vent faible (${current.vent} km/h). Conditions idéales pour les traitements phytosanitaires foliaires.`});
+
+  // ETP et irrigation
+  const etpMoy = previsions.reduce((s,d)=>s+(d.etp||5),0)/previsions.length;
+  const irrigationJour = Math.max(0, etpMoy - (totalPluie7/7));
+  if (irrigationJour > 4)
+    tips.push({icon:'💦',title:`Irrigation : ~${irrigationJour.toFixed(1)} mm/j nécessaires`,
+      text:`L'évapotranspiration (${etpMoy.toFixed(1)} mm/j) dépasse les précipitations prévues. Planifiez vos irrigations en conséquence.`});
+
+  document.getElementById('agro-tips').innerHTML = tips.map(t=>`
+    <div class="agro-tip">
+      <div class="agro-tip-icon">${t.icon}</div>
+      <div>
+        <h4>${t.title}</h4>
+        <p>${t.text}</p>
+      </div>
+    </div>`).join('');
+}
+
+/* ── Recherche manuelle ── */
+function searchVille() {
+  const val = document.getElementById('search-ville').value.trim();
+  if (!val) return;
+  document.querySelectorAll('.ville-btn').forEach(b => b.classList.remove('active'));
+  loadVille(val, null);
+  document.getElementById('search-ville').value = '';
+}
+
+/* ── Init ── */
+loadVille('Abidjan', document.querySelector('.ville-btn[data-ville="Abidjan"]'));
+</script>
+</body>
+</html>

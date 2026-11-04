@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartAgri – Prédiction IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/app.css"/>
+  <style>
+    .pred-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Slider avec affichage de valeur */
+    .slider-field { display: flex; flex-direction: column; gap: 6px; }
+    .slider-label-row { display: flex; justify-content: space-between; align-items: center; }
+    .slider-val {
+      font-size: .9rem; font-weight: 700; color: var(--green-700);
+      background: var(--green-50); padding: 2px 10px; border-radius: 999px;
+      min-width: 70px; text-align: center;
+    }
+    input[type=range] {
+      width: 100%; accent-color: var(--green-500);
+      height: 6px; border-radius: 3px; cursor: pointer;
+    }
+    .slider-hints { display: flex; justify-content: space-between; font-size: .7rem; color: var(--gray-400); }
+
+    /* Résultat */
+    .result-card {
+      background: linear-gradient(135deg, var(--green-700), var(--green-900));
+      color: #fff; border-radius: var(--radius-xl); padding: 28px;
+      text-align: center; position: sticky; top: calc(var(--topbar-h) + 24px);
+    }
+    .result-card h3 { font-size: .88rem; font-weight: 500; opacity: .8; margin-bottom: 12px; }
+    .result-big {
+      font-size: 3.5rem; font-weight: 800; line-height: 1;
+      margin-bottom: 4px;
+    }
+    .result-unit { font-size: 1rem; opacity: .75; margin-bottom: 20px; }
+    .result-culture { font-size: .9rem; margin-bottom: 20px; opacity: .85; }
+    .result-confiance {
+      background: rgba(255,255,255,.12); border-radius: var(--radius-md);
+      padding: 10px 16px; margin-bottom: 20px;
+    }
+    .result-confiance-label { font-size: .75rem; opacity: .7; margin-bottom: 4px; }
+    .conf-bar-bg { height: 8px; background: rgba(255,255,255,.2); border-radius: 4px; overflow: hidden; }
+    .conf-bar-fill { height: 100%; background: var(--green-300); border-radius: 4px; transition: width .8s ease; }
+    .result-tips { text-align: left; }
+    .result-tips h4 { font-size: .82rem; font-weight: 600; opacity: .75; margin-bottom: 8px; }
+    .result-tips ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .result-tips li { font-size: .82rem; opacity: .85; display: flex; gap: 6px; line-height: 1.4; }
+
+    /* Placeholder vide */
+    .result-empty {
+      opacity: .5; font-size: .88rem; margin-top: 16px;
+      line-height: 1.6;
+    }
+    .result-empty .big-icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* Historique */
+    .history-table thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+    .history-table thead th:last-child  { border-radius: 0 var(--radius-sm) 0 0; }
+
+    /* Indicateurs contextuels */
+    .context-hints {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+      margin-bottom: 20px;
+    }
+    .hint-box {
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md); padding: 10px 12px;
+      text-align: center;
+    }
+    .hint-box .hint-icon { font-size: 1.3rem; margin-bottom: 4px; }
+    .hint-box .hint-val  { font-size: .92rem; font-weight: 700; color: var(--gray-900); }
+    .hint-box .hint-lbl  { font-size: .7rem;  color: var(--gray-400); }
+
+    @media(max-width:900px){.pred-layout{grid-template-columns:1fr;}}
+    @media(max-width:480px){.context-hints{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" id="menu-toggle">☰</button>
+    <a href="dashboard.html" class="topbar-logo"><span class="leaf">🌱</span>SmartAgri</a>
+  </div>
+  <div class="topbar-right">
+    <div class="avatar-wrap">
+      <div class="avatar" id="topbar-avatar" tabindex="0">JD</div>
+      <div class="dropdown" id="user-dropdown">
+        <div class="dropdown-header">
+          <strong id="drop-name"></strong><span id="drop-email"></span>
+          <span id="drop-role" style="font-size:.72rem;color:var(--green-500);font-weight:600;margin-top:2px;display:block;"></span>
+        </div>
+        <a href="dashboard.html">📊 Dashboard</a>
+        <button class="logout" id="btn-logout">🚪 Déconnexion</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">Navigation</div>
+  <a class="nav-link" href="dashboard.html" data-page="dashboard"><span class="icon">📊</span>Dashboard</a>
+  <a class="nav-link" href="parcelles.html" data-page="parcelles"><span class="icon">🗺️</span>Mes parcelles</a>
+  <a class="nav-link active" href="prediction.html" data-page="prediction"><span class="icon">🔮</span>Prédiction IA</a>
+  <a class="nav-link" href="meteo.html" data-page="meteo"><span class="icon">🌦️</span>Météo</a>
+  <a class="nav-link" href="agribot.html" data-page="agribot"><span class="icon">👵🏻​</span>AgriBot<span class="nav-badge">IA</span></a>
+  <div class="sidebar-section">Compte</div>
+  <button class="nav-link" onclick="Auth.logout()" data-page="logout" style="background:none;border:none;cursor:pointer;font-family:inherit;width:100%;text-align:left;"><span class="icon">🚪</span>Déconnexion</button>
+</nav>
+
+<main class="main-content">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>🔮 Prédiction de rendement IA</h1>
+      <p>Renseignez les paramètres de votre parcelle pour obtenir une estimation</p>
+    </div>
+  </div>
+
+  <div class="pred-layout">
+
+    <!-- ── Formulaire ── -->
+    <div>
+
+      <!-- Indicateurs météo temps réel -->
+      <div class="context-hints" id="context-hints" style="display:none;">
+        <div class="hint-box"><div class="hint-icon">🌡️</div><div class="hint-val" id="hint-temp">–</div><div class="hint-lbl">Temp. actuelle</div></div>
+        <div class="hint-box"><div class="hint-icon">💧</div><div class="hint-val" id="hint-hum">–</div><div class="hint-lbl">Humidité</div></div>
+        <div class="hint-box"><div class="hint-icon">🌧️</div><div class="hint-val" id="hint-pluv">–</div><div class="hint-lbl">Pluie mensuelle est.</div></div>
+        <div class="hint-box"><div class="hint-icon">📍</div><div class="hint-val" id="hint-ville">–</div><div class="hint-lbl">Ville météo</div></div>
+      </div>
+      <!-- Alerte source météo -->
+      <div id="meteo-source-alert" class="alert alert-info" style="display:none;margin-bottom:14px;"></div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <span class="card-title">⚙️ Paramètres de la parcelle</span>
+          <select class="select" id="parcelle-select" style="max-width:220px;"
+                  onchange="prefillFromParcelle()" title="Charger depuis une parcelle">
+            <option value="">Charger depuis une parcelle…</option>
+          </select>
+        </div>
+
+        <div id="form-alert" class="alert" style="display:none;"></div>
+
+        <div class="form-grid" style="margin-bottom:20px;">
+          <div class="field">
+            <label>Culture *</label>
+            <select id="p-culture" class="select" onchange="updateCultureInfo()">
+              <option value="">Choisir…</option>
+              <option value="mais">🌽 Maïs</option>
+              <option value="riz">🌾 Riz</option>
+              <option value="arachide">🥜 Arachide</option>
+              <option value="sorgho">🌿 Sorgho</option>
+              <option value="mil">🌿 Mil</option>
+              <option value="coton">☁️ Coton</option>
+              <option value="manioc">🥔 Manioc</option>
+            </select>
+            <span class="input-error" id="err-culture"></span>
+          </div>
+          <div class="field">
+            <label>Type de sol *</label>
+            <select id="p-sol" class="select">
+              <option value="">Choisir…</option>
+              <option value="sableux">Sableux</option>
+              <option value="argileux">Argileux</option>
+              <option value="limoneux">Limoneux</option>
+              <option value="lateritique">Latéritique</option>
+            </select>
+            <span class="input-error" id="err-sol"></span>
+          </div>
+          <div class="field">
+            <label>Superficie (ha) *</label>
+            <input type="number" id="p-superficie" class="input" value="1" min="0.01" step="0.1" placeholder="Ex: 2.5"/>
+            <span class="input-error" id="err-sup"></span>
+          </div>
+        </div>
+
+        <!-- Sliders -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label>💧 Pluviométrie</label>
+              <span class="slider-val" id="val-pluv">450 mm</span>
+            </div>
+            <input type="range" id="p-pluv" min="0" max="2000" value="450" step="10"
+                   oninput="document.getElementById('val-pluv').textContent=this.value+' mm'"/>
+            <div class="slider-hints"><span>Sécheresse (0 mm)</span><span>Optimum (~600 mm)</span><span>Excès (2000 mm)</span></div>
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label>🌡️ Température moyenne</label>
+              <span class="slider-val" id="val-temp">26 °C</span>
+            </div>
+            <input type="range" id="p-temp" min="10" max="45" value="26" step="0.5"
+                   oninput="document.getElementById('val-temp').textContent=this.value+' °C'"/>
+            <div class="slider-hints"><span>Froid (10°C)</span><span>Optimum (~26°C)</span><span>Chaud (45°C)</span></div>
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label>🌿 Engrais apporté</label>
+              <span class="slider-val" id="val-engrais">50 kg/ha</span>
+            </div>
+            <input type="range" id="p-engrais" min="0" max="200" value="50" step="5"
+                   oninput="document.getElementById('val-engrais').textContent=this.value+' kg/ha'"/>
+            <div class="slider-hints"><span>Sans engrais</span><span>Recommandé (~50 kg/ha)</span><span>Intensif (200 kg/ha)</span></div>
+          </div>
+
+        </div>
+
+        <button class="btn btn-primary btn-full" id="btn-predict" onclick="doPrediction()"
+                style="margin-top:24px;padding:14px;">
+          🔮 Lancer la prédiction
+        </button>
+      </div>
+
+      <!-- Info culture -->
+      <div class="card" id="culture-info-card" style="display:none;">
+        <div class="card-title" style="margin-bottom:12px;">📖 Fiche culture</div>
+        <div id="culture-info-content"></div>
+      </div>
+
+      <!-- Historique -->
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header">
+          <span class="card-title">🕐 Historique des prédictions</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadHistorique()">↺ Rafraîchir</button>
+        </div>
+        <div class="table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Culture</th><th>Sol</th><th>Pluie</th><th>Temp.</th>
+                <th>Engrais</th><th>Rendement</th><th>Confiance</th><th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:20px;">Chargement…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Résultat ── -->
+    <div class="result-card" id="result-card">
+      <div id="result-empty">
+        <div class="big-icon">🔮</div>
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:10px;">Prêt à prédire</div>
+        <div class="result-empty">
+          Remplissez les paramètres à gauche et cliquez sur
+          <strong>Lancer la prédiction</strong> pour obtenir une estimation de rendement.
+        </div>
+      </div>
+      <div id="result-content" style="display:none;">
+        <h3>Rendement prédit</h3>
+        <div class="result-big" id="res-rendement">–</div>
+        <div class="result-unit">tonnes par hectare</div>
+        <div class="result-culture" id="res-culture"></div>
+        <div class="result-confiance">
+          <div class="result-confiance-label">Indice de confiance du modèle</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="conf-bar-bg" style="flex:1;">
+              <div class="conf-bar-fill" id="conf-fill" style="width:0%;"></div>
+            </div>
+            <span style="font-size:.88rem;font-weight:700;" id="conf-val">–%</span>
+          </div>
+        </div>
+        <div class="result-tips" id="result-tips"></div>
+        <button class="btn btn-outline" onclick="doPrediction()"
+                style="width:100%;margin-top:16px;background:rgba(255,255,255,.1);
+                       border-color:rgba(255,255,255,.3);color:#fff;">
+          ↺ Recalculer
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<div id="toast-container"></div>
+
+<script src="../assets/js/api.js"></script>
+<script>
+requireAuth();
+initTopbar();
+setActiveNav('prediction');
+
+/* ── Fiches culture ── */
+const CULTURE_INFO = {
+  mais: {
+    desc: "Le maïs est la céréale la plus cultivée au Sénégal. Il nécessite une pluviométrie régulière.",
+    besoins: ["Pluviométrie : 450–600 mm/saison","Température : 20–30°C","Engrais : NPK au semis + urée V6"],
+    risques: "Sensible à la sécheresse au stade floraison.",
+  },
+  riz: {
+    desc: "Le riz irrigué offre les meilleurs rendements. La culture pluviale dépend de l'hivernage.",
+    besoins: ["Pluviométrie : 600–1200 mm","Température : 22–32°C","Engrais : DAP + urée fractionnée"],
+    risques: "Sensible à la pyriculariose en conditions humides.",
+  },
+  arachide: {
+    desc: "Culture phare du bassin arachidier sénégalais. Fixe l'azote atmosphérique.",
+    besoins: ["Pluviométrie : 300–500 mm","Température : 25–35°C","Faible besoin en azote (fixation)"],
+    risques: "Risque d'aflatoxine si stockage humide.",
+  },
+  sorgho: {
+    desc: "Très résistant à la sécheresse, adapté aux zones sahéliennes.",
+    besoins: ["Pluviométrie : 300–500 mm","Température : 25–35°C","Peu exigeant en engrais"],
+    risques: "Attaqué par les oiseaux à maturité.",
+  },
+  mil: {
+    desc: "Céréale de base des zones sahéliennes. Extrêmement tolérante à la sécheresse.",
+    besoins: ["Pluviométrie : 250–400 mm","Température : 25–35°C","Sol sableux léger préféré"],
+    risques: "Faibles rendements sans engrais.",
+  },
+  coton: {
+    desc: "Culture de rente importante. Demande un encadrement technique.",
+    besoins: ["Pluviométrie : 600–800 mm","Température : 25–35°C","Engrais complet indispensable"],
+    risques: "Nombreux ravageurs, nécessite phytosanitaires homologués.",
+  },
+  manioc: {
+    desc: "Culture vivrière très résistante. Rendements élevés.",
+    besoins: ["Pluviométrie : 600–1200 mm","Température : 25–29°C","Sol bien drainé"],
+    risques: "Toxicité cyanure si mal transformé.",
+  },
+};
+
+/* ── Fiche culture dynamique ── */
+function updateCultureInfo() {
+  const culture = document.getElementById('p-culture').value;
+  const card = document.getElementById('culture-info-card');
+  const content = document.getElementById('culture-info-content');
+  if (!culture || !CULTURE_INFO[culture]) { card.style.display = 'none'; return; }
+  const info = CULTURE_INFO[culture];
+  card.style.display = 'block';
+  content.innerHTML = `
+    <p style="font-size:.86rem;color:var(--gray-600);margin-bottom:12px;">${info.desc}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <div style="font-size:.75rem;font-weight:700;color:var(--green-700);margin-bottom:6px;">✅ Besoins</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:4px;">
+          ${info.besoins.map(b => `<li style="font-size:.8rem;color:var(--gray-600);">• ${b}</li>`).join('')}
+        </ul>
+      </div>
+      <div>
+        <div style="font-size:.75rem;font-weight:700;color:var(--red);margin-bottom:6px;">⚠️ Risques</div>
+        <p style="font-size:.8rem;color:var(--gray-600);">${info.risques}</p>
+      </div>
+    </div>`;
+}
+
+/* ── Charger les parcelles dans le select ── */
+async function loadParcellesSelect() {
+  try {
+    const list = await ApiParcelles.list();
+    const sel = document.getElementById('parcelle-select');
+    list.forEach(p => {
+      sel.innerHTML += `<option value="${p.id}"
+        data-culture="${p.culture}"
+        data-sol="${p.type_sol}"
+        data-sup="${p.superficie}"
+        data-ville="${p.ville || 'Dakar'}">${p.nom} (${p.culture}${p.ville ? ' · '+p.ville : ''})</option>`;
+    });
+  } catch(e) {}
+}
+
+/* ── Pré-remplir depuis une parcelle + charger météo de sa ville ── */
+async function prefillFromParcelle() {
+  const sel = document.getElementById('parcelle-select');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) return;
+  document.getElementById('p-culture').value   = opt.dataset.culture || '';
+  document.getElementById('p-sol').value        = opt.dataset.sol    || '';
+  document.getElementById('p-superficie').value = opt.dataset.sup    || '1';
+  updateCultureInfo();
+
+  // Charger la météo de la ville de la parcelle
+  const ville = opt.dataset.ville || 'Dakar';
+  showToast('Chargement météo pour ' + ville + '…', 'info');
+  await loadContextMeteo(ville);
+  showToast('Paramètres chargés + météo de ' + ville, 'success');
+}
+
+/* ── Pré-remplir depuis URL params ── */
+function prefillFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('culture'))    { document.getElementById('p-culture').value   = params.get('culture');    updateCultureInfo(); }
+  if (params.get('sol'))        { document.getElementById('p-sol').value        = params.get('sol'); }
+  if (params.get('superficie')) { document.getElementById('p-superficie').value = params.get('superficie'); }
+
+  // Si on vient de meteo.html avec données réelles
+  if (params.get('pluv') && params.get('source') === 'meteo') {
+    const pluv = parseFloat(params.get('pluv'));
+    const temp = parseFloat(params.get('temp'));
+    const ville = decodeURIComponent(params.get('ville') || 'Dakar');
+
+    if (!isNaN(pluv)) {
+      const sv = Math.min(2000, Math.max(0, Math.round(pluv)));
+      document.getElementById('p-pluv').value = sv;
+      document.getElementById('val-pluv').textContent = sv + ' mm';
+    }
+    if (!isNaN(temp)) {
+      const st = Math.min(45, Math.max(10, temp));
+      document.getElementById('p-temp').value = st;
+      document.getElementById('val-temp').textContent = st + ' °C';
+    }
+    document.getElementById('hint-ville').textContent = ville;
+    document.getElementById('hint-pluv').textContent  = (!isNaN(pluv) ? pluv : '–') + ' mm';
+    document.getElementById('hint-temp').textContent  = (!isNaN(temp) ? temp : '–') + '°C';
+    document.getElementById('hint-hum').textContent   = '–';
+    document.getElementById('context-hints').style.display = 'grid';
+    const a = document.getElementById('meteo-source-alert');
+    a.innerHTML = `<span class="alert-icon">✅</span>
+      <span>Données météo de <strong>${ville}</strong> pré-remplies depuis la page Météo.</span>`;
+    a.style.display = 'flex';
+  }
+}
+
+/* ── Météo réelle via Open-Meteo (par ville de la parcelle ou Dakar) ── */
+async function loadContextMeteo(ville = 'Dakar') {
+  try {
+    const [current, previsions] = await Promise.all([
+      ApiMeteo.current(ville),
+      ApiMeteo.previsions(ville),
+    ]);
+
+    // Pluviométrie mensuelle estimée depuis les prévisions 7j
+    const pluieMois = previsions.pluie_mensuelle_estimee || 0;
+    const pluie7j   = previsions.total_pluie_7j || 0;
+
+    // Mettre à jour les indicateurs
+    document.getElementById('hint-temp').textContent  = current.temperature + '°C';
+    document.getElementById('hint-hum').textContent   = current.humidite + '%';
+    document.getElementById('hint-pluv').textContent  = pluieMois + ' mm';
+    document.getElementById('hint-ville').textContent = current.ville;
+    document.getElementById('context-hints').style.display = 'grid';
+
+    // ─ Pré-remplir slider température ─
+    const sliderTemp = document.getElementById('p-temp');
+    const clampTemp  = Math.min(45, Math.max(10, current.temperature));
+    sliderTemp.value = clampTemp;
+    document.getElementById('val-temp').textContent = clampTemp + ' °C';
+
+    // ─ Pré-remplir slider pluviométrie ─
+    const sliderPluv = document.getElementById('p-pluv');
+    const clampPluv  = Math.min(2000, Math.max(0, Math.round(pluieMois)));
+    sliderPluv.value = clampPluv;
+    document.getElementById('val-pluv').textContent = clampPluv + ' mm';
+
+    // Afficher la source
+    const alertEl = document.getElementById('meteo-source-alert');
+    alertEl.innerHTML = `
+      <span class="alert-icon">🌐</span>
+      <span>Données météo <strong>${current.source || 'Open-Meteo'}</strong> pour <strong>${current.ville}</strong>
+      — Température ${current.temperature}°C · Pluie mensuelle estimée ${pluieMois} mm
+      · Humidité ${current.humidite}%
+      <a href="meteo.html" style="color:inherit;text-decoration:underline;margin-left:6px;">Voir prévisions →</a></span>`;
+    alertEl.style.display = 'flex';
+
+    return { temperature: current.temperature, pluviometrie: pluieMois };
+  } catch(e) {
+    document.getElementById('context-hints').style.display = 'grid';
+    document.getElementById('hint-temp').textContent  = '–';
+    document.getElementById('hint-hum').textContent   = '–';
+    document.getElementById('hint-pluv').textContent  = '–';
+    document.getElementById('hint-ville').textContent = ville;
+    return null;
+  }
+}
+
+/* ── Lancer prédiction ── */
+async function doPrediction() {
+  const culture   = document.getElementById('p-culture').value;
+  const type_sol  = document.getElementById('p-sol').value;
+  const superficie = parseFloat(document.getElementById('p-superficie').value);
+  const pluv      = parseFloat(document.getElementById('p-pluv').value);
+  const temp      = parseFloat(document.getElementById('p-temp').value);
+  const engrais   = parseFloat(document.getElementById('p-engrais').value);
+
+  // Validation
+  let ok = true;
+  document.querySelectorAll('.input-error').forEach(el => el.textContent = '');
+  if (!culture)             { document.getElementById('err-culture').textContent = 'Requis.'; ok = false; }
+  if (!type_sol)            { document.getElementById('err-sol').textContent     = 'Requis.'; ok = false; }
+  if (!superficie || superficie <= 0){ document.getElementById('err-sup').textContent = 'Valeur invalide.'; ok = false; }
+  if (!ok) return;
+
+  const btn = document.getElementById('btn-predict');
+  setButtonLoading(btn, true);
+
+  try {
+    const result = await ApiPrediction.predict({
+      culture, type_sol, superficie, pluviometrie: pluv,
+      temperature: temp, engrais_kg: engrais,
+    });
+
+    // Afficher le résultat
+    document.getElementById('result-empty').style.display   = 'none';
+    document.getElementById('result-content').style.display = 'block';
+
+    const icons = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+    document.getElementById('res-rendement').textContent =
+      result.rendement_predit.toFixed(2);
+    document.getElementById('res-culture').textContent =
+      `${icons[culture] || '🌱'} ${culture.charAt(0).toUpperCase()+culture.slice(1)} · ${superficie} ha`;
+
+    // Confiance
+    const conf = result.confiance || 80;
+    document.getElementById('conf-val').textContent = conf.toFixed(0) + '%';
+    setTimeout(() => {
+      document.getElementById('conf-fill').style.width = conf + '%';
+    }, 100);
+
+    // Conseils
+    const rend = result.rendement_predit;
+    let tips = [];
+    if (pluv < 400)  tips.push('💧 Pluviométrie faible — envisagez l\'irrigation');
+    if (pluv > 1200) tips.push('🌧️ Pluviométrie élevée — risque d\'engorgement');
+    if (temp > 35)   tips.push('🌡️ Température élevée — arrosez en soirée');
+    if (engrais < 20) tips.push('🌿 Augmentez la dose d\'engrais pour améliorer le rendement');
+    if (rend > 4)    tips.push('✅ Excellent rendement prévu ! Continuez.');
+    if (rend < 1.5)  tips.push('⚠️ Rendement faible — consultez AgriBot pour des conseils');
+
+    document.getElementById('result-tips').innerHTML = tips.length
+      ? `<h4>💡 Conseils</h4><ul>${tips.map(t=>`<li><span>•</span><span>${t}</span></li>`).join('')}</ul>`
+      : '<h4>✅ Paramètres optimaux</h4><p style="font-size:.82rem;opacity:.8;">Vos conditions sont favorables à un bon rendement.</p>';
+
+    showToast('Prédiction effectuée avec succès !', 'success');
+    loadHistorique();
+
+  } catch (e) {
+    const alert = document.getElementById('form-alert');
+    alert.textContent = '❌ ' + e.message;
+    alert.className   = 'alert alert-error';
+    alert.style.display = 'flex';
+  } finally {
+    setButtonLoading(btn, false);
+  }
+}
+
+/* ── Historique ── */
+async function loadHistorique() {
+  const tbody = document.getElementById('history-tbody');
+  try {
+    const list = await ApiPrediction.historique();
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:20px;">Aucune prédiction encore</td></tr>';
+      return;
+    }
+    const icons = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+    tbody.innerHTML = list.slice(0,10).map(p => `
+      <tr>
+        <td>${icons[p.culture]||'🌱'} ${p.culture}</td>
+        <td>${p.type_sol}</td>
+        <td>${p.pluviometrie} mm</td>
+        <td>${p.temperature}°C</td>
+        <td>${p.engrais_kg} kg/ha</td>
+        <td><strong style="color:var(--green-700);">${p.rendement_predit} t/ha</strong></td>
+        <td>${p.confiance ? p.confiance.toFixed(0)+'%' : '–'}</td>
+        <td>${formatDateShort(p.created_at)}</td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);">Erreur de chargement</td></tr>';
+  }
+}
+
+/* ── Init ── */
+prefillFromUrl();
+loadParcellesSelect();
+loadHistorique();
+
+// Charger météo réelle (ville depuis URL, ou Dakar par défaut)
+const _urlParams = new URLSearchParams(window.location.search);
+if (_urlParams.get('source') !== 'meteo') {
+  // Pas de données météo depuis la page météo → charger automatiquement
+  loadContextMeteo(_urlParams.get('ville') || 'Dakar');
+}
+</script>
+</body>
+</html>

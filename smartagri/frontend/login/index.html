@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartAgri – Connexion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div class="login-page">
+
+  <!-- ── Panneau gauche branding ── -->
+  <aside class="brand-panel" aria-hidden="true">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <span class="brand-leaf">🌱</span>
+        <span>SmartAgri</span>
+      </div>
+      <h1 class="brand-title">Cultivez l'intelligence,<br/>récoltez la performance.</h1>
+      <p class="brand-sub">La plateforme qui transforme vos données agricoles en décisions gagnantes.</p>
+
+      <ul class="brand-features">
+        <li><span class="feat-icon">📊</span><div><strong>Prédiction IA</strong><span>Estimez vos rendements à l'avance</span></div></li>
+        <li><span class="feat-icon">🗺️</span><div><strong>Gestion des parcelles</strong><span>Suivi GPS et historique complet</span></div></li>
+        <li><span class="feat-icon">👵🏻​</span><div><strong>AgriBot</strong><span>Conseils agricoles 24h/24</span></div></li>
+        <li><span class="feat-icon">🌦️</span><div><strong>Météo agricole</strong><span>Prévisions localisées</span></div></li>
+      </ul>
+
+      <div class="brand-stats">
+        <div class="bstat"><span class="bstat-val">2 500+</span><span class="bstat-lbl">Agriculteurs</span></div>
+        <div class="bstat"><span class="bstat-val">94%</span><span class="bstat-lbl">Précision IA</span></div>
+        <div class="bstat"><span class="bstat-val">12 000+</span><span class="bstat-lbl">Prédictions</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Panneau droit formulaire ── -->
+  <main class="form-panel">
+    <div class="form-card">
+
+      <!-- Logo mobile -->
+      <div class="mobile-logo">
+        <span>🌱</span><span>SmartAgri</span>
+      </div>
+
+      <!-- Onglets -->
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="tab-login"    onclick="showTab('login')"   role="tab">Connexion</button>
+        <button class="tab"        id="tab-register" onclick="showTab('register')" role="tab">Inscription</button>
+      </div>
+
+      <!-- ══ CONNEXION ══ -->
+      <section id="panel-login">
+        <div class="form-head">
+          <h2>Bon retour 👋</h2>
+          <p>Connectez-vous à votre espace SmartAgri</p>
+        </div>
+
+        <div class="alert alert-demo">
+          <span>🔑</span>
+          <span><strong>Compte démo :</strong> demo@smartagri.com / Demo1234!</span>
+        </div>
+
+        <div id="login-alert" class="form-alert" style="display:none;"></div>
+
+        <form id="login-form" novalidate autocomplete="on">
+          <div class="field-wrap">
+            <label for="l-email">Adresse e-mail</label>
+            <div class="input-icon-wrap">
+              <span class="iicon">✉️</span>
+              <input type="email" id="l-email" class="finput" placeholder="vous@exemple.com"
+                     autocomplete="email" required/>
+            </div>
+            <span class="ferr" id="err-l-email"></span>
+          </div>
+
+          <div class="field-wrap">
+            <label for="l-pwd">Mot de passe</label>
+            <div class="input-icon-wrap">
+              <span class="iicon">🔒</span>
+              <input type="password" id="l-pwd" class="finput" placeholder="••••••••"
+                     autocomplete="current-password" required/>
+              <button type="button" class="eye-btn" onclick="toggleEye('l-pwd',this)" aria-label="Voir">👁</button>
+            </div>
+            <span class="ferr" id="err-l-pwd"></span>
+          </div>
+
+          <div class="row-sb">
+            <label class="chk-label">
+              <input type="checkbox" id="remember"/>
+              <span class="chk-box"></span>Se souvenir de moi
+            </label>
+            <button type="button" class="link-btn" onclick="showTab('forgot')">Mot de passe oublié ?</button>
+          </div>
+
+          <button type="submit" class="submit-btn" id="btn-login">
+            <span>Se connecter</span>
+          </button>
+        </form>
+
+        <div class="or-divider"><span>ou continuer avec</span></div>
+        <div class="social-row">
+          <button class="social-btn" onclick="socialDemo('Google')">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.3 0 24 0 14.7 0 6.7 5.4 2.8 13.3l7.8 6C12.5 13 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.6 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.4-5.7l-7.5-5.8c-2.1 1.4-4.7 2.2-7.9 2.2-6.2 0-11.5-3.5-13.4-8.7l-8 6C6.7 42.6 14.7 48 24 48z"/></svg>
+            Google
+          </button>
+          <button class="social-btn" onclick="socialDemo('Facebook')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.88v2.27h3.32l-.53 3.5h-2.79V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
+            Facebook
+          </button>
+        </div>
+
+        <!-- Choix plateforme (après connexion) -->
+        <div id="platform-box" style="display:none;">
+          <p class="platform-label">🎉 Connexion réussie ! Choisissez votre plateforme</p>
+          <div class="platform-grid">
+            <button class="platform-btn" onclick="goToApp('web')">
+              <span class="pbtn-icon">🖥️</span>
+              <span class="pbtn-name">Application Web</span>
+              <span class="pbtn-desc">Dashboard complet</span>
+            </button>
+            <button class="platform-btn" onclick="goToApp('mobile')">
+              <span class="pbtn-icon">📱</span>
+              <span class="pbtn-name">Application Mobile</span>
+              <span class="pbtn-desc">Flutter — Accès terrain</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ INSCRIPTION ══ -->
+      <section id="panel-register" style="display:none;">
+        <div class="form-head">
+          <h2>Créer un compte 🌿</h2>
+          <p>Rejoignez des milliers d'agriculteurs connectés</p>
+        </div>
+
+        <div id="register-alert" class="form-alert" style="display:none;"></div>
+
+        <form id="register-form" novalidate>
+          <div class="two-cols">
+            <div class="field-wrap">
+              <label for="r-fn">Prénom</label>
+              <div class="input-icon-wrap">
+                <span class="iicon">👤</span>
+                <input type="text" id="r-fn" class="finput" placeholder="Jean" required/>
+              </div>
+              <span class="ferr" id="err-r-fn"></span>
+            </div>
+            <div class="field-wrap">
+              <label for="r-ln">Nom</label>
+              <div class="input-icon-wrap">
+                <span class="iicon">👤</span>
+                <input type="text" id="r-ln" class="finput" placeholder="Diallo" required/>
+              </div>
+              <span class="ferr" id="err-r-ln"></span>
+            </div>
+          </div>
+
+          <div class="field-wrap">
+            <label for="r-email">E-mail</label>
+            <div class="input-icon-wrap">
+              <span class="iicon">✉️</span>
+              <input type="email" id="r-email" class="finput" placeholder="vous@exemple.com" required/>
+            </div>
+            <span class="ferr" id="err-r-email"></span>
+          </div>
+
+          <div class="field-wrap">
+            <label for="r-phone">Téléphone <span class="optional">(optionnel)</span></label>
+            <div class="input-icon-wrap">
+              <span class="iicon">📞</span>
+              <input type="tel" id="r-phone" class="finput" placeholder="+221 77 000 00 00"/>
+            </div>
+          </div>
+
+          <div class="field-wrap">
+            <label for="r-role">Profil</label>
+            <div class="input-icon-wrap select-wrap">
+              <span class="iicon">🧑‍🌾</span>
+              <select id="r-role" class="finput fselect" required>
+                <option value="">Sélectionnez votre profil</option>
+                <option value="agriculteur">Agriculteur</option>
+                <option value="cooperative">Coopérative agricole</option>
+                <option value="conseiller">Conseiller agricole</option>
+                <option value="chercheur">Chercheur / Agronome</option>
+              </select>
+            </div>
+            <span class="ferr" id="err-r-role"></span>
+          </div>
+
+          <div class="field-wrap">
+            <label for="r-pwd">Mot de passe</label>
+            <div class="input-icon-wrap">
+              <span class="iicon">🔒</span>
+              <input type="password" id="r-pwd" class="finput" placeholder="Min. 8 caractères"
+                     autocomplete="new-password" required/>
+              <button type="button" class="eye-btn" onclick="toggleEye('r-pwd',this)" aria-label="Voir">👁</button>
+            </div>
+            <div class="pwd-meter" id="pwd-meter" style="display:none;">
+              <div class="pwd-bar"><div class="pwd-fill" id="pwd-fill"></div></div>
+              <span id="pwd-label"></span>
+            </div>
+            <span class="ferr" id="err-r-pwd"></span>
+          </div>
+
+          <div class="field-wrap">
+            <label for="r-confirm">Confirmer le mot de passe</label>
+            <div class="input-icon-wrap">
+              <span class="iicon">🔒</span>
+              <input type="password" id="r-confirm" class="finput" placeholder="Répétez le mot de passe"
+                     autocomplete="new-password" required/>
+              <button type="button" class="eye-btn" onclick="toggleEye('r-confirm',this)" aria-label="Voir">👁</button>
+            </div>
+            <span class="ferr" id="err-r-confirm"></span>
+          </div>
+
+          <label class="chk-label terms">
+            <input type="checkbox" id="r-terms" required/>
+            <span class="chk-box"></span>
+            J'accepte les <a href="#" class="clink">conditions d'utilisation</a> et la <a href="#" class="clink">politique de confidentialité</a>
+          </label>
+          <span class="ferr" id="err-r-terms"></span>
+
+          <button type="submit" class="submit-btn" id="btn-register">
+            <span>Créer mon compte</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- ══ MOT DE PASSE OUBLIÉ ══ -->
+      <section id="panel-forgot" style="display:none;">
+        <button class="back-btn" onclick="showTab('login')">← Retour à la connexion</button>
+        <div class="form-head">
+          <h2>Mot de passe oublié 🔑</h2>
+          <p>Recevez un lien de réinitialisation par e-mail</p>
+        </div>
+        <div id="forgot-alert" class="form-alert" style="display:none;"></div>
+        <form id="forgot-form" novalidate>
+          <div class="field-wrap">
+            <label for="f-email">Adresse e-mail</label>
+            <div class="input-icon-wrap">
+              <span class="iicon">✉️</span>
+              <input type="email" id="f-email" class="finput" placeholder="vous@exemple.com" required/>
+            </div>
+            <span class="ferr" id="err-f-email"></span>
+          </div>
+          <button type="submit" class="submit-btn">Envoyer le lien</button>
+        </form>
+      </section>
+
+      <p class="form-footer">
+        SmartAgri &copy; 2026 &middot; Tous droits réservés<br/>
+        <a href="../mobile/telecharger.html" style="color:var(--g500);text-decoration:none;font-weight:600;font-size:.78rem;">
+          📲 Installer l'application mobile
+        </a>
+      </p>
+    </div>
+  </main>
+
+</div>
+
+<script src="../app/assets/js/api.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

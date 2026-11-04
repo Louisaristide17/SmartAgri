@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartAgri — Télécharger l'application</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.svg"/>
+  <link rel="icon" type="image/svg+xml" href="icon-192.svg"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --g900: #1b4332; --g700: #2d6a4f; --g500: #40916c;
+      --g300: #74c69d; --g100: #d8f3dc; --g50: #f0fdf4;
+      --white: #fff; --gray50: #f9fafb; --gray200: #e5e7eb;
+      --gray400: #9ca3af; --gray500: #6b7280; --gray700: #374151; --gray900: #111827;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    body {
+      font-family: var(--font); min-height: 100vh;
+      background: linear-gradient(160deg, var(--g900) 0%, var(--g700) 60%, var(--g500) 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; color: var(--gray700);
+      -webkit-font-smoothing: antialiased;
+    }
+    .download-card {
+      background: var(--white); border-radius: 24px;
+      max-width: 420px; width: 100%; padding: 40px 28px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.25);
+      text-align: center;
+      animation: cardIn .4s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Logo */
+    .app-logo {
+      width: 96px; height: 96px; border-radius: 24px;
+      background: linear-gradient(135deg, var(--g500), var(--g900));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(45,106,79,.3);
+    }
+    .app-name { font-size: 1.6rem; font-weight: 800; color: var(--gray900); margin-bottom: 4px; }
+    .app-tagline { font-size: .88rem; color: var(--gray500); margin-bottom: 28px; }
+
+    /* Bouton installer */
+    .install-btn {
+      width: 100%; padding: 16px;
+      background: linear-gradient(135deg, var(--g500), var(--g700));
+      color: #fff; border: none; border-radius: 14px;
+      font-family: var(--font); font-size: 1rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 4px 16px rgba(45,106,79,.35);
+      transition: all .15s; margin-bottom: 12px;
+    }
+    .install-btn:active { transform: scale(.97); }
+    .install-btn.secondary {
+      background: var(--gray50); color: var(--gray700);
+      border: 1.5px solid var(--gray200); box-shadow: none;
+    }
+
+    /* Étapes */
+    .steps { text-align: left; margin: 28px 0; }
+    .steps h3 { font-size: .82rem; font-weight: 700; text-transform: uppercase;
+                letter-spacing: .08em; color: var(--gray400); margin-bottom: 14px; text-align: center; }
+    .step {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--gray50);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--g100); color: var(--g700);
+      font-size: .82rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-text { font-size: .88rem; color: var(--gray700); line-height: 1.5; padding-top: 3px; }
+    .step-text strong { color: var(--gray900); }
+
+    /* OS tabs */
+    .os-tabs {
+      display: flex; gap: 6px; background: var(--gray50);
+      border-radius: 12px; padding: 4px; margin-bottom: 20px;
+    }
+    .os-tab {
+      flex: 1; padding: 10px; border: none; background: none;
+      border-radius: 8px; font-family: var(--font); font-size: .86rem;
+      font-weight: 600; color: var(--gray400); cursor: pointer;
+      transition: all .15s;
+    }
+    .os-tab.active {
+      background: var(--white); color: var(--g700);
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+
+    .os-content { display: none; }
+    .os-content.active { display: block; animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Features */
+    .features { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }
+    .feature-pill {
+      padding: 6px 12px; background: var(--g50); border-radius: 999px;
+      font-size: .76rem; font-weight: 600; color: var(--g700);
+    }
+
+    /* Note */
+    .note {
+      background: #eff6ff; border: 1px solid #93c5fd;
+      border-radius: 10px; padding: 10px 14px;
+      font-size: .78rem; color: #1e40af; margin-top: 16px; text-align: left;
+      display: flex; gap: 8px; align-items: flex-start;
+    }
+    .note-icon { flex-shrink: 0; font-size: 1rem; }
+
+    .footer { font-size: .72rem; color: var(--gray400); margin-top: 20px; }
+    .footer a { color: var(--g500); text-decoration: none; font-weight: 600; }
+
+    /* Spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .install-success {
+      display: none; padding: 14px; background: #dcfce7;
+      border: 1px solid #86efac; border-radius: 12px;
+      color: #166534; font-size: .88rem; font-weight: 500;
+      margin-bottom: 16px;
+    }
+    .install-success.show { display: flex; align-items: center; gap: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="download-card">
+  <!-- Logo -->
+  <div class="app-logo">🌱</div>
+  <div class="app-name">SmartAgri</div>
+  <div class="app-tagline">L'agriculture intelligente dans votre poche</div>
+
+  <!-- Features -->
+  <div class="features">
+    <span class="feature-pill">📊 Prédiction IA</span>
+    <span class="feature-pill">🗺️ Parcelles</span>
+    <span class="feature-pill">👵🏻​ AgriBot</span>
+    <span class="feature-pill">🌦️ Météo</span>
+  </div>
+
+  <!-- Message succès -->
+  <div class="install-success" id="install-success">
+    <span>✅</span>
+    <span>Application installée ! Retrouvez SmartAgri sur votre écran d'accueil.</span>
+  </div>
+
+  <!-- Boutons -->
+  <button class="install-btn" id="pwa-install-btn" style="display:none;" onclick="installPWA()">
+    <span>📲</span>
+    <span>Installer l'application</span>
+  </button>
+
+  <button class="install-btn" onclick="window.location.href='./index.html'">
+    <span>🚀</span>
+    <span>Ouvrir l'application</span>
+  </button>
+
+  <button class="install-btn secondary" onclick="window.location.href='../login/index.html'">
+    <span>🔑</span>
+    <span>Se connecter / S'inscrire</span>
+  </button>
+
+  <!-- Onglets Android / iOS -->
+  <div class="os-tabs" style="margin-top:28px;">
+    <button class="os-tab active" onclick="showOS('android',this)">👵🏻​ Android</button>
+    <button class="os-tab" onclick="showOS('ios',this)">📱 iPhone</button>
+  </div>
+
+  <!-- Android -->
+  <div class="os-content active" id="os-android">
+    <div class="steps">
+      <h3>Installer sur Android</h3>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Ouvrez cette page dans <strong>Chrome</strong> sur votre téléphone Android.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Appuyez sur le bouton <strong>« Installer l'application »</strong> ci-dessus, ou tapez le menu ⋮ en haut à droite.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Choisissez <strong>« Ajouter à l'écran d'accueil »</strong> ou <strong>« Installer l'application »</strong>.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">L'icône 🌱 <strong>SmartAgri</strong> apparaît sur votre écran d'accueil. C'est installé !</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS -->
+  <div class="os-content" id="os-ios">
+    <div class="steps">
+      <h3>Installer sur iPhone</h3>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Ouvrez cette page dans <strong>Safari</strong> sur votre iPhone.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Appuyez sur le bouton <strong>Partager</strong> (icône carré avec flèche ↑ en bas).</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Sélectionnez <strong>« Sur l'écran d'accueil »</strong>.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Appuyez sur <strong>« Ajouter »</strong>. L'icône 🌱 SmartAgri apparaît sur votre iPhone.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note -->
+  <div class="note">
+    <span class="note-icon">💡</span>
+    <span>SmartAgri est une <strong>PWA</strong> (Progressive Web App). Elle s'installe comme une vraie application, fonctionne hors ligne et prend peu de place. Aucun téléchargement depuis un store nécessaire.</span>
+  </div>
+
+  <div class="footer">
+    SmartAgri &copy; 2026 · <a href="./index.html">Ouvrir l'app</a>
+  </div>
+</div>
+
+<script>
+/* ── Gestion onglets OS ── */
+function showOS(os, btn) {
+  document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.os-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('os-' + os).classList.add('active');
+}
+
+/* ── PWA install prompt ── */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('pwa-install-btn').style.display = 'flex';
+});
+
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choice) => {
+      if (choice.outcome === 'accepted') {
+        document.getElementById('install-success').classList.add('show');
+        document.getElementById('pwa-install-btn').style.display = 'none';
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    alert('Pour installer l\'app :\n\nAndroid : Menu ⋮ → Ajouter à l\'écran d\'accueil\n\niPhone : Bouton Partager → Sur l\'écran d\'accueil');
+  }
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-success').classList.add('show');
+  document.getElementById('pwa-install-btn').style.display = 'none';
+});
+
+/* ── Service Worker ── */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(() => console.log('SW enregistré'))
+    .catch(err => console.log('SW erreur', err));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "SmartAgri — Agriculture Intelligente",
+  "short_name": "SmartAgri",
+  "description": "Prédisez vos rendements, gérez vos parcelles, consultez la météo et discutez avec AgriBot.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b4332",
+  "theme_color": "#2d6a4f",
+  "icons": [
+    {
+      "src": "./icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["agriculture", "productivity", "business"],
+  "lang": "fr",
+  "dir": "ltr"
+}

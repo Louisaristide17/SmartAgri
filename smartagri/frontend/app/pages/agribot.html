@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartAgri – AgriBot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/app.css"/>
+  <style>
+    /* Layout chat */
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+      height: calc(100vh - var(--topbar-h) - 80px);
+    }
+
+    /* Fenêtre de chat */
+    .chat-window {
+      display: flex; flex-direction: column;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(135deg, var(--green-700), var(--green-900));
+      color: #fff;
+    }
+    .chat-header-left { display: flex; align-items: center; gap: 12px; }
+    .bot-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+    }
+    .bot-name   { font-weight: 700; font-size: .95rem; }
+    .bot-status {
+      font-size: .75rem; opacity: .75;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #22c55e;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; }
+      50%      { opacity:.4; }
+    }
+    .chat-header-actions { display: flex; gap: 8px; }
+    .chat-action-btn {
+      background: rgba(255,255,255,.15); border: none; border-radius: 6px;
+      color: #fff; cursor: pointer; padding: 6px 10px; font-size: .78rem;
+      font-family: var(--font); transition: background .18s;
+    }
+    .chat-action-btn:hover { background: rgba(255,255,255,.25); }
+
+    /* Messages */
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+      background: var(--gray-50);
+    }
+
+    .msg-row { display: flex; gap: 10px; max-width: 85%; }
+    .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+    .msg-row.bot  { align-self: flex-start; }
+
+    .msg-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700;
+    }
+    .msg-avatar.bot  { background: var(--green-100); color: var(--green-700); font-size: 1rem; }
+    .msg-avatar.user { background: linear-gradient(135deg, var(--green-500), var(--green-700)); color: #fff; }
+
+    .msg-bubble {
+      padding: 10px 14px; border-radius: 14px;
+      font-size: .88rem; line-height: 1.6;
+      box-shadow: var(--shadow-xs);
+    }
+    .msg-bubble.bot {
+      background: var(--white); color: var(--gray-800);
+      border: 1px solid var(--gray-200);
+      border-bottom-left-radius: 4px;
+    }
+    .msg-bubble.user {
+      background: linear-gradient(135deg, var(--green-500), var(--green-700));
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-bubble strong { font-weight: 600; }
+    .msg-bubble code {
+      background: rgba(0,0,0,.06); padding: 1px 4px;
+      border-radius: 3px; font-size: .82rem; font-family: monospace;
+    }
+    .msg-bubble.bot code { background: var(--gray-100); }
+    .msg-bubble table { border-collapse: collapse; margin: 6px 0; font-size: .82rem; }
+    .msg-bubble td { padding: 4px 8px; border: 1px solid var(--gray-200); }
+    .msg-time { font-size: .7rem; color: var(--gray-400); margin-top: 3px; text-align: right; }
+    .msg-row.bot .msg-time { text-align: left; }
+
+    /* Typing indicator */
+    .typing-indicator { display: flex; gap: 5px; padding: 12px 14px; align-items: center; }
+    .typing-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green-300); animation: bounce 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: .2s; }
+    .typing-dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); }
+      30%          { transform: translateY(-8px); }
+    }
+
+    /* Input zone */
+    .chat-input-zone {
+      padding: 14px 16px;
+      border-top: 1px solid var(--gray-200);
+      background: var(--white);
+      display: flex; gap: 10px; align-items: flex-end;
+    }
+    .chat-textarea {
+      flex: 1; padding: 10px 14px;
+      border: 1.5px solid var(--gray-300); border-radius: 20px;
+      font-family: var(--font); font-size: .9rem; color: var(--gray-900);
+      resize: none; outline: none; max-height: 120px; overflow-y: auto;
+      transition: border-color .18s, box-shadow .18s;
+      line-height: 1.5;
+    }
+    .chat-textarea:focus {
+      border-color: var(--green-500);
+      box-shadow: 0 0 0 3px rgba(64,145,108,.12);
+    }
+    .send-btn {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--green-500), var(--green-700));
+      border: none; cursor: pointer; color: #fff; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .18s, box-shadow .18s;
+      box-shadow: 0 3px 10px rgba(45,106,79,.3);
+    }
+    .send-btn:hover:not(:disabled) { transform: scale(1.08); box-shadow: 0 5px 14px rgba(45,106,79,.4); }
+    .send-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Panel latéral */
+    .side-panel { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+
+    /* Suggestions */
+    .suggest-list { display: flex; flex-direction: column; gap: 7px; }
+    .suggest-btn {
+      text-align: left; padding: 10px 13px;
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md); font-family: var(--font);
+      font-size: .83rem; color: var(--gray-700); cursor: pointer;
+      transition: all .15s; display: flex; align-items: center; gap: 8px;
+      line-height: 1.4;
+    }
+    .suggest-btn:hover {
+      background: var(--green-50); border-color: var(--green-300);
+      color: var(--green-700); transform: translateX(3px);
+    }
+    .suggest-icon { font-size: 1rem; flex-shrink: 0; }
+
+    /* Infos bot */
+    .bot-info { background: var(--green-50); border: 1px solid var(--green-200); border-radius: var(--radius-md); padding: 14px; }
+    .bot-info-title { font-size: .78rem; font-weight: 700; color: var(--green-700); margin-bottom: 8px; }
+    .bot-info-item { font-size: .78rem; color: var(--gray-600); display: flex; gap: 6px; margin-bottom: 5px; }
+
+    @media(max-width:900px){
+      .chat-layout { grid-template-columns: 1fr; height: auto; }
+      .side-panel   { display: none; }
+      .chat-window  { height: calc(100vh - var(--topbar-h) - 120px); }
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" id="menu-toggle">☰</button>
+    <a href="dashboard.html" class="topbar-logo"><span class="leaf">🌱</span>SmartAgri</a>
+  </div>
+  <div class="topbar-right">
+    <div class="avatar-wrap">
+      <div class="avatar" id="topbar-avatar" tabindex="0">JD</div>
+      <div class="dropdown" id="user-dropdown">
+        <div class="dropdown-header">
+          <strong id="drop-name"></strong><span id="drop-email"></span>
+          <span id="drop-role" style="font-size:.72rem;color:var(--green-500);font-weight:600;margin-top:2px;display:block;"></span>
+        </div>
+        <a href="dashboard.html">📊 Dashboard</a>
+        <button class="logout" id="btn-logout">🚪 Déconnexion</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">Navigation</div>
+  <a class="nav-link" href="dashboard.html" data-page="dashboard"><span class="icon">📊</span>Dashboard</a>
+  <a class="nav-link" href="parcelles.html" data-page="parcelles"><span class="icon">🗺️</span>Mes parcelles</a>
+  <a class="nav-link" href="prediction.html" data-page="prediction"><span class="icon">🔮</span>Prédiction IA</a>
+  <a class="nav-link" href="meteo.html" data-page="meteo"><span class="icon">🌦️</span>Météo</a>
+  <a class="nav-link active" href="agribot.html" data-page="agribot"><span class="icon">👵🏻​</span>AgriBot<span class="nav-badge">IA</span></a>
+  <div class="sidebar-section">Compte</div>
+  <button class="nav-link" onclick="Auth.logout()" data-page="logout" style="background:none;border:none;cursor:pointer;font-family:inherit;width:100%;text-align:left;"><span class="icon">🚪</span>Déconnexion</button>
+</nav>
+
+<main class="main-content" style="padding-bottom:0;">
+
+  <div class="page-header" style="margin-bottom:16px;">
+    <div class="page-header-left">
+      <h1>👵🏻 AgriBot – Assistant IA</h1>
+      <p>Posez vos questions agricoles, obtenez des conseils personnalisés</p>
+    </div>
+  </div>
+
+  <div class="chat-layout">
+
+    <!-- ── Fenêtre de chat ── -->
+    <div class="chat-window">
+
+      <!-- Header -->
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <div class="bot-avatar">👵🏻​</div>
+          <div>
+            <div class="bot-name">AgriBot</div>
+            <div class="bot-status">
+              <span class="status-dot"></span>
+              En ligne · Prêt à vous aider
+            </div>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="chat-action-btn" onclick="clearChat()" title="Effacer l'historique">
+            🗑️ Effacer
+          </button>
+          <button class="chat-action-btn" onclick="exportChat()" title="Exporter la conversation">
+            💾 Exporter
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-messages" id="chat-messages">
+        <!-- Message de bienvenue chargé via JS -->
+      </div>
+
+      <!-- Zone de saisie -->
+      <div class="chat-input-zone">
+        <textarea class="chat-textarea" id="chat-input" rows="1"
+                  placeholder="Posez votre question agricole…"
+                  onkeydown="handleKey(event)"
+                  oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Envoyer" aria-label="Envoyer">
+          ➤
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ── Panel latéral ── -->
+    <div class="side-panel">
+
+      <!-- Questions suggérées -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">💡 Questions suggérées</div>
+        <div class="suggest-list">
+          <button class="suggest-btn" onclick="suggest('Quels engrais pour le maïs ?')">
+            <span class="suggest-icon">🌽</span>Engrais pour le maïs
+          </button>
+          <button class="suggest-btn" onclick="suggest('Quelle est la meilleure période pour semer le riz ?')">
+            <span class="suggest-icon">🌾</span>Période de semis du riz
+          </button>
+          <button class="suggest-btn" onclick="suggest('Comment améliorer la fertilité de mon sol argileux ?')">
+            <span class="suggest-icon">🌍</span>Fertilité sol argileux
+          </button>
+          <button class="suggest-btn" onclick="suggest('Mon arachide montre des taches sur les feuilles, que faire ?')">
+            <span class="suggest-icon">🥜</span>Maladies de l'arachide
+          </button>
+          <button class="suggest-btn" onclick="suggest('Comment calculer le besoin en irrigation de mon maïs ?')">
+            <span class="suggest-icon">💧</span>Besoin en irrigation
+          </button>
+          <button class="suggest-btn" onclick="suggest('Quelles cultures résistent le mieux à la sécheresse ?')">
+            <span class="suggest-icon">🌵</span>Cultures résistantes
+          </button>
+          <button class="suggest-btn" onclick="suggest('Comment lutter contre les criquets pèlerins ?')">
+            <span class="suggest-icon">🦗</span>Criquets pèlerins
+          </button>
+        </div>
+      </div>
+
+      <!-- À propos AgriBot -->
+      <div class="bot-info">
+        <div class="bot-info-title">ℹ️ À propos d'AgriBot</div>
+        <div class="bot-info-item">🌱 <span>Spécialisé en agriculture d'Afrique de l'Ouest</span></div>
+        <div class="bot-info-item">📚 <span>Base de connaissances agronomiques</span></div>
+        <div class="bot-info-item">🔒 <span>Conversations sauvegardées et privées</span></div>
+        <div class="bot-info-item">⚡ <span>Répond en quelques secondes</span></div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--green-200);">
+          <p style="font-size:.74rem;color:var(--gray-400);line-height:1.5;">
+            AgriBot ne remplace pas un agronome de terrain. Pour des décisions critiques, consultez un technicien agricole.
+          </p>
+        </div>
+      </div>
+
+      <!-- Stats conversation -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:10px;">📊 Cette conversation</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:.84rem;">
+            <span style="color:var(--gray-500);">Messages envoyés</span>
+            <strong id="stat-msgs">0</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.84rem;">
+            <span style="color:var(--gray-500);">Réponses reçues</span>
+            <strong id="stat-responses">0</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<div id="toast-container"></div>
+
+<script src="../assets/js/api.js"></script>
+<script>
+requireAuth();
+initTopbar();
+setActiveNav('agribot');
+
+const user = Auth.getUser();
+let msgCount = 0;
+let respCount = 0;
+
+/* ── Auto-resize textarea ── */
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+/* ── Touche Entrée pour envoyer ── */
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+/* ── Rendu d'un message ── */
+function renderMessage(role, content, time = null) {
+  const messages = document.getElementById('chat-messages');
+  const initials = role === 'user'
+    ? ((user?.firstname?.[0] || '') + (user?.lastname?.[0] || '')).toUpperCase() || 'U'
+    : '👵🏻​';
+
+  const timeStr = time
+    ? new Date(time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    : new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  const htmlContent = role === 'assistant' ? markdownToHtml(content) : escapeHtml(content);
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${role === 'user' ? 'user' : 'bot'}`;
+  row.innerHTML = `
+    <div class="msg-avatar ${role === 'user' ? 'user' : 'bot'}">${initials}</div>
+    <div>
+      <div class="msg-bubble ${role === 'user' ? 'user' : 'bot'}">${htmlContent}</div>
+      <div class="msg-time">${timeStr}</div>
+    </div>`;
+
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── Indicateur "en train d'écrire" ── */
+function showTyping() {
+  const messages = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg-row bot';
+  div.id = 'typing-row';
+  div.innerHTML = `
+    <div class="msg-avatar bot">👵🏻​</div>
+    <div class="msg-bubble bot">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function hideTyping() {
+  document.getElementById('typing-row')?.remove();
+}
+
+/* ── Envoyer un message ── */
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  renderMessage('user', content);
+  msgCount++;
+  document.getElementById('stat-msgs').textContent = msgCount;
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  showTyping();
+
+  try {
+    const response = await ApiAgribot.sendMessage(content);
+    hideTyping();
+    renderMessage('assistant', response.content, response.created_at);
+    respCount++;
+    document.getElementById('stat-responses').textContent = respCount;
+  } catch (e) {
+    hideTyping();
+    renderMessage('assistant', '❌ Erreur : ' + e.message);
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+/* ── Suggestion rapide ── */
+function suggest(text) {
+  const input = document.getElementById('chat-input');
+  input.value = text;
+  autoResize(input);
+  input.focus();
+}
+
+/* ── Effacer l'historique ── */
+async function clearChat() {
+  if (!confirm('Effacer toute la conversation ?')) return;
+  try {
+    await ApiAgribot.clearHistory();
+    document.getElementById('chat-messages').innerHTML = '';
+    msgCount = 0; respCount = 0;
+    document.getElementById('stat-msgs').textContent = '0';
+    document.getElementById('stat-responses').textContent = '0';
+    showWelcome();
+    showToast('Conversation effacée.', 'success');
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+/* ── Exporter la conversation ── */
+function exportChat() {
+  const messages = document.querySelectorAll('.msg-bubble');
+  const rows     = document.querySelectorAll('.msg-row');
+  let text = 'Conversation AgriBot – SmartAgri\n';
+  text += '='.repeat(40) + '\n\n';
+  rows.forEach(row => {
+    const isUser = row.classList.contains('user');
+    const bubble = row.querySelector('.msg-bubble');
+    const time   = row.querySelector('.msg-time');
+    if (bubble) {
+      text += `[${isUser ? 'Vous' : 'AgriBot'}] ${time?.textContent || ''}\n`;
+      text += bubble.innerText + '\n\n';
+    }
+  });
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `agribot_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  showToast('Conversation exportée.', 'success');
+}
+
+/* ── Message de bienvenue ── */
+function showWelcome() {
+  const name = user?.firstname || 'agriculteur';
+  renderMessage('assistant',
+    `👋 Bonjour **${name}** ! Je suis **AgriBot**, votre assistant agricole intelligent.\n\n` +
+    `Je suis là pour vous aider avec :\n` +
+    `• 🌾 **Cultures** – conseils de semis, engrais, irrigation\n` +
+    `• 🦠 **Maladies** – diagnostic et traitement\n` +
+    `• 📅 **Calendrier** – périodes optimales\n` +
+    `• 🌍 **Sols** – fertilité et amendements\n\n` +
+    `Posez-moi votre question ou cliquez sur une suggestion à droite.`
+  );
+}
+
+/* ── Charger l'historique existant ── */
+async function loadHistory() {
+  try {
+    const history = await ApiAgribot.historique();
+    if (history.length === 0) {
+      showWelcome();
+      return;
+    }
+    history.forEach(msg => {
+      renderMessage(msg.role === 'user' ? 'user' : 'assistant', msg.content, msg.created_at);
+      if (msg.role === 'user') msgCount++;
+      else respCount++;
+    });
+    document.getElementById('stat-msgs').textContent      = msgCount;
+    document.getElementById('stat-responses').textContent = respCount;
+  } catch(e) {
+    showWelcome();
+  }
+}
+
+/* ── Init ── */
+loadHistory();
+</script>
+</body>
+</html>
