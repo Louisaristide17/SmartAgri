@@ -1,10 +1,10 @@
 /**
  * SmartAgri — Client API
  * Toutes les communications avec le backend FastAPI passent par ce module.
- * Base URL : http://localhost:8000
+ * Base URL : https://smartagri-api-d3ga.onrender.com
  */
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://smartagri-api-d3ga.onrender.com';
 
 /* ───────────────────────────────────────────
    GESTION DU TOKEN JWT
@@ -34,8 +34,8 @@ const Auth = {
       // On est dans frontend/app/pages/ → remonter de 3 niveaux
       window.location.replace('../../login/index.html');
     } else {
-      // Fallback absolu depuis la racine du projet
-      window.location.replace('/smartagri/frontend/login/index.html');
+      // Fallback absolu (racine du site déployé)
+      window.location.replace('/login/index.html');
     }
   },
 };
