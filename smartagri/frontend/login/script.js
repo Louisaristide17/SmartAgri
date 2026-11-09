@@ -197,8 +197,16 @@ function socialDemo(provider) {
 function goToApp(platform) {
   if (platform === 'web') {
     window.location.href = '../app/pages/dashboard.html';
-  } else {
-    window.location.href = '../mobile/index.html';
+  } else if (platform === 'mobile') {
+    // Téléchargement direct de l'APK Android
+    const a = document.createElement('a');
+    a.href = '../mobile/smartagri.apk';
+    a.download = 'smartagri.apk';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Message de confirmation
+    showAlert('login-alert', '📥 Téléchargement de l\\'APK lancé. Installez-le sur votre téléphone Android (autorisez "Sources inconnues").', 'success');
   }
 }
 

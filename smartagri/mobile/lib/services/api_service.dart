@@ -3,8 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// URL de l'API backend FastAPI
-const String kApiBase = 'http://10.0.2.2:8000'; // Android emulator → localhost
-// const String kApiBase = 'http://localhost:8000';   // Web / iOS
+const String kApiBase = 'https://smartagri-api-d3ga.onrender.com'; // API Render (prod)
+// const String kApiBase = 'http://10.0.2.2:8000';   // Android emulator → localhost
+// const String kApiBase = 'http://localhost:8000';  // Web / iOS
 // const String kApiBase = 'http://192.168.1.XX:8000'; // Réseau local réel
 
 class ApiException implements Exception {

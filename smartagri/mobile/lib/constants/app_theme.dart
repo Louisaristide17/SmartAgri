@@ -103,7 +103,7 @@ class AppTheme {
     ),
 
     // ── Cards ──
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.white,
       elevation: 2,
       shadowColor: Colors.black12,

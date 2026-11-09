@@ -3,6 +3,7 @@ import '../constants/app_colors.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/common_widgets.dart';
+import '../main.dart' show MainScreenState;
 
 class ParcellesScreen extends StatefulWidget {
   const ParcellesScreen({super.key});
