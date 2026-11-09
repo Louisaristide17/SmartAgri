@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Démarrage rapide
+## Démarrage rapide
 
 ### Prérequis
 - Flutter SDK ≥ 3.0 : https://flutter.dev/docs/get-started/install
@@ -42,7 +42,7 @@ const String kApiBase = 'http://localhost:8000';
 
 ---
 
-## 📂 Structure du projet
+##  Structure du projet
 
 ```
 mobile/
@@ -69,7 +69,7 @@ mobile/
 
 ---
 
-## ✨ Fonctionnalités
+##  Fonctionnalités
 
 | Écran       | Ce que l'agriculteur peut faire                        |
 |-------------|--------------------------------------------------------|
@@ -81,7 +81,7 @@ mobile/
 
 ---
 
-## 🎨 Design accessible
+## Design accessible
 
 - **Grandes zones tactiles** (min 54px) pour les doigts
 - **Textes grands et lisibles** (14–22px)
@@ -92,7 +92,7 @@ mobile/
 
 ---
 
-## 🔑 Compte de démo
+## Compte de démo
 
 ```
 Email    : demo@smartagri.com

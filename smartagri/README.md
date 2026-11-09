@@ -6,7 +6,7 @@ SmartAgri est une application web complète qui aide les agriculteurs d'Afrique 
 
 ---
 
-## 🗂️ Structure du projet
+## Structure du projet
 
 ```
 smartagri/
@@ -44,7 +44,7 @@ smartagri/
 
 ---
 
-## 🚀 Démarrage rapide
+## Démarrage rapide
 
 ### 1. Backend (FastAPI)
 
@@ -80,7 +80,7 @@ Ouvrez simplement `frontend/login/index.html` dans votre navigateur.
 
 ---
 
-## 🔑 Compte de démonstration
+## Compte de démonstration
 
 | Champ    | Valeur               |
 |----------|----------------------|
@@ -91,7 +91,7 @@ Créé automatiquement au premier démarrage du backend.
 
 ---
 
-## 🛠️ Technologies utilisées
+## Technologies utilisées
 
 ### Backend
 | Technologie | Rôle |
@@ -115,7 +115,7 @@ Créé automatiquement au premier démarrage du backend.
 
 ---
 
-## 🌐 Endpoints API
+## Endpoints API
 
 ### Authentification
 ```
@@ -166,7 +166,7 @@ OPENAI_API_KEY=votre_clé_openai        # Optionnel pour AgriBot GPT
 
 ---
 
-## 📊 Fonctionnalités
+## Fonctionnalités
 
 - ✅ **Authentification JWT** — inscription, connexion, token sécurisé
 - ✅ **Gestion des parcelles** — CRUD complet avec filtres et recherche
@@ -179,7 +179,7 @@ OPENAI_API_KEY=votre_clé_openai        # Optionnel pour AgriBot GPT
 
 ---
 
-## 👨‍💻 Auteur
+## Auteur
 
 Projet de soutenance — Formation IA / Développement Web, SIMPLON 2026
 
