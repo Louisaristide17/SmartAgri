@@ -24,7 +24,7 @@ if not exist ".env" (
 )
 
 echo ============================================
-echo  Site disponible sur : http://localhost:8000
+echo  Site disponible sur : http://localhost:8001
 echo  Compte demo : demo@smartagri.com
 echo  Mot de passe : Demo1234!
 echo.
@@ -32,9 +32,9 @@ echo  Appuyez sur CTRL+C pour arreter.
 echo ============================================
 echo.
 
-start /b cmd /c "timeout /t 3 >nul && start http://localhost:8000"
+start /b cmd /c "timeout /t 3 >nul && start http://localhost:8001"
 
-python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8001
 
 echo.
 pause

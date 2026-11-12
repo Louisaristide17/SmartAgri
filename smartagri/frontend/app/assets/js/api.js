@@ -8,11 +8,9 @@
 const API_BASE = (() => {
   const h = window.location.hostname;
   const proto = window.location.protocol;
-  // Ouverture directe en file:// ou depuis localhost → backend local
   if (proto === 'file:' || h === 'localhost' || h === '127.0.0.1') {
-    return 'http://localhost:8000';
+    return 'http://localhost:8001';
   }
-  // En ligne (Render, autre hébergeur)
   return 'https://smartagri-api-d3ga.onrender.com';
 })();
 
