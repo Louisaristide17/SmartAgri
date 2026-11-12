@@ -1,17 +1,20 @@
 /**
  * SmartAgri — Client API
  * Toutes les communications avec le backend FastAPI passent par ce module.
- * Détection automatique : local (localhost) → port 8000, en ligne → Render
+ * - En local  : http://localhost:8000  (backend sert aussi le frontend)
+ * - En ligne  : https://smartagri-api-d3ga.onrender.com
  */
 
-// Détection automatique de l'environnement
-const API_BASE = (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  window.location.protocol === 'file:'
-)
-  ? 'http://localhost:8000'
-  : 'https://smartagri-api-d3ga.onrender.com';
+const API_BASE = (() => {
+  const h = window.location.hostname;
+  const proto = window.location.protocol;
+  // Ouverture directe en file:// ou depuis localhost → backend local
+  if (proto === 'file:' || h === 'localhost' || h === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  // En ligne (Render, autre hébergeur)
+  return 'https://smartagri-api-d3ga.onrender.com';
+})();
 
 /* ───────────────────────────────────────────
    GESTION DU TOKEN JWT
@@ -33,15 +36,14 @@ const Auth = {
   logout() {
     this.removeToken();
     this.removeUser();
-    // Calcule le chemin vers login/index.html
-    // depuis n'importe quelle profondeur (file:// ou serveur local)
+    // Fonctionne que ce soit via file://, localhost:8000 ou Render
     const base = window.location.href;
     const pagesIdx = base.indexOf('/pages/');
     if (pagesIdx !== -1) {
-      // On est dans frontend/app/pages/ → remonter de 3 niveaux
       window.location.replace('../../login/index.html');
+    } else if (base.includes('/app/')) {
+      window.location.replace('../login/index.html');
     } else {
-      // Fallback absolu (racine du site déployé)
       window.location.replace('/login/index.html');
     }
   },

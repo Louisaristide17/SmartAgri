@@ -7,8 +7,10 @@ ReDoc       : http://localhost:8000/redoc
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
+import os
 
 from database import engine, Base
 from routers import auth_router, parcelles_router, prediction_router, meteo_router, agribot_router
@@ -49,6 +51,10 @@ app.include_router(agribot_router.router)
 # ─── Routes utilitaires ───────────────────────────────────────────
 @app.get("/", tags=["Health"])
 def root():
+    # Si le frontend est disponible, rediriger vers la page de connexion
+    frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "login", "index.html")
+    if os.path.exists(frontend_path):
+        return RedirectResponse(url="/login/index.html")
     return {
         "message": "🌱 SmartAgri API opérationnelle",
         "version": "1.0.0",
@@ -91,3 +97,10 @@ def seed_demo():
 # ─── Lancement direct ─────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+# ─── Serveur de fichiers statiques (frontend) ─────────────────────
+# Monte le frontend APRÈS les routes API pour ne pas les masquer
+_frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
+if os.path.isdir(_frontend_dir):
+    app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")

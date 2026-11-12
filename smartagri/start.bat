@@ -1,88 +1,95 @@
 @echo off
-chcp 65001 >nul
-title SmartAgri - Lancement local
+title SmartAgri
 
 echo.
-echo  =============================================
-echo    SmartAgri - Demarrage local complet
-echo  =============================================
+echo  ============================================
+echo    SmartAgri - Demarrage local
+echo  ============================================
 echo.
 
-:: ── Dossier backend ──────────────────────────────────────────
-cd /d "%~dp0backend"
+:: Chemin absolu vers le dossier backend
+set "BACKEND=%~dp0backend"
+set "VENV_PY=%BACKEND%\venv\Scripts\python.exe"
+set "VENV_PIP=%BACKEND%\venv\Scripts\pip.exe"
+
+:: Aller dans le backend
+cd /d "%BACKEND%"
 if errorlevel 1 (
-    echo [ERREUR] Impossible d'acceder au dossier backend.
-    pause & exit /b 1
+    echo ERREUR : dossier backend introuvable.
+    pause
+    exit /b 1
 )
 
-:: ── Verifier Python ──────────────────────────────────────────
+:: Verifier Python
 where python >nul 2>&1
 if errorlevel 1 (
-    echo [ERREUR] Python introuvable. Installez Python 3.11+ depuis python.org
+    echo ERREUR : Python introuvable dans le PATH.
+    echo Installez Python depuis https://www.python.org
     echo Cochez "Add Python to PATH" lors de l'installation.
-    pause & exit /b 1
+    pause
+    exit /b 1
 )
-for /f "tokens=2" %%v in ('python --version 2^>^&1') do set PY_VER=%%v
-echo  Python detecte : %PY_VER%
 
-:: ── Creer .env si absent ─────────────────────────────────────
-if not exist ".env" (
-    if exist ".env.example" (
-        copy ".env.example" ".env" >nul
-        echo  Fichier .env cree depuis .env.example
+echo  Python trouve.
+
+:: Creer le fichier .env si absent
+if not exist "%BACKEND%\.env" (
+    if exist "%BACKEND%\.env.example" (
+        copy "%BACKEND%\.env.example" "%BACKEND%\.env" >nul
+        echo  Fichier .env cree.
     )
 )
 
-:: ── Creer ou recrér le venv si les packages manquent ─────────
-set VENV_PY=venv\Scripts\python.exe
-set VENV_PIP=venv\Scripts\pip.exe
-
+:: Creer le venv si absent
 if not exist "%VENV_PY%" (
-    echo  Creation du virtualenv...
-    python -m venv venv
-)
-
-:: Verifier que fastapi est installe dans le venv
-%VENV_PY% -c "import fastapi" >nul 2>&1
-if errorlevel 1 (
-    echo  Installation des dependances (1-2 minutes la premiere fois)...
-    %VENV_PIP% install --upgrade pip --quiet
-    %VENV_PIP% install ^
-        fastapi ^
-        "uvicorn[standard]" ^
-        sqlalchemy ^
-        "python-jose[cryptography]" ^
-        "bcrypt" ^
-        python-dotenv ^
-        "pydantic[email]" ^
-        httpx ^
-        --quiet --no-warn-script-location
+    echo  Creation du virtualenv Python...
+    python -m venv "%BACKEND%\venv"
     if errorlevel 1 (
-        echo [ERREUR] Installation echouee. Verifiez votre connexion internet.
-        pause & exit /b 1
+        echo ERREUR : impossible de creer le venv.
+        pause
+        exit /b 1
     )
-    echo  Dependances installees.
+    echo  Virtualenv cree.
+)
+
+:: Installer les dependances si fastapi est absent
+"%VENV_PY%" -c "import fastapi" >nul 2>&1
+if errorlevel 1 (
+    echo  Installation des dependances (patience, 1-3 min)...
+    "%VENV_PIP%" install fastapi "uvicorn[standard]" sqlalchemy "python-jose[cryptography]" bcrypt python-dotenv "pydantic[email]" httpx aiofiles --quiet
+    if errorlevel 1 (
+        echo.
+        echo ERREUR : installation des packages echouee.
+        echo Verifiez votre connexion internet et reessayez.
+        pause
+        exit /b 1
+    )
+    echo  Packages installes.
+)
+
+:: Installer aiofiles si absent (pour les fichiers statiques)
+"%VENV_PY%" -c "import aiofiles" >nul 2>&1
+if errorlevel 1 (
+    "%VENV_PIP%" install aiofiles --quiet
 )
 
 echo.
-echo  -----------------------------------------------
-echo   API Backend   : http://localhost:8000
-echo   Documentation : http://localhost:8000/docs
+echo  ============================================
+echo   Serveur demarre sur : http://localhost:8000
 echo.
-echo   >> Ouvrez CE lien dans votre navigateur <<
-echo   http://localhost:8000/static/../../../frontend/login/index.html
+echo   Le site s'ouvre automatiquement.
+echo   Compte demo : demo@smartagri.com
+echo   Mot de passe : Demo1234!
 echo.
-echo   Ou ouvrez directement ce fichier :
-echo   %~dp0frontend\login\index.html
-echo.
-echo   Compte demo : demo@smartagri.com / Demo1234!
-echo  -----------------------------------------------
-echo.
-echo  Appuyez sur CTRL+C pour arreter.
+echo   Appuyez sur CTRL+C pour arreter.
+echo  ============================================
 echo.
 
-:: ── Demarrer uvicorn avec le venv ────────────────────────────
-%VENV_PY% -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+:: Ouvrir le navigateur apres 2 secondes
+start /b cmd /c "timeout /t 2 >nul && start http://localhost:8000"
+
+:: Lancer le backend
+"%VENV_PY%" -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
 echo.
 echo  Serveur arrete.
