@@ -1,10 +1,17 @@
 /**
  * SmartAgri — Client API
  * Toutes les communications avec le backend FastAPI passent par ce module.
- * Base URL : https://smartagri-api-d3ga.onrender.com
+ * Détection automatique : local (localhost) → port 8000, en ligne → Render
  */
 
-const API_BASE = 'https://smartagri-api-d3ga.onrender.com';
+// Détection automatique de l'environnement
+const API_BASE = (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.protocol === 'file:'
+)
+  ? 'http://localhost:8000'
+  : 'https://smartagri-api-d3ga.onrender.com';
 
 /* ───────────────────────────────────────────
    GESTION DU TOKEN JWT

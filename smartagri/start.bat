@@ -1,68 +1,89 @@
 @echo off
-title SmartAgri - Backend
+chcp 65001 >nul
+title SmartAgri - Lancement local
 
 echo.
 echo  =============================================
-echo    SmartAgri - Demarrage du backend FastAPI
+echo    SmartAgri - Demarrage local complet
 echo  =============================================
 echo.
 
-:: ── Aller dans le dossier backend ──────────────────────────────
+:: ── Dossier backend ──────────────────────────────────────────
 cd /d "%~dp0backend"
 if errorlevel 1 (
     echo [ERREUR] Impossible d'acceder au dossier backend.
-    echo Verifiez que le dossier "backend" existe dans le meme dossier que ce fichier.
-    pause
-    exit /b 1
+    pause & exit /b 1
 )
 
-echo  Dossier : %CD%
-echo.
-
-:: ── Verifier Python ────────────────────────────────────────────
-python --version 2>nul
+:: ── Verifier Python ──────────────────────────────────────────
+where python >nul 2>&1
 if errorlevel 1 (
-    echo [ERREUR] Python n'est pas installe ou pas dans le PATH.
-    echo Telechargez Python sur : https://www.python.org/downloads/
+    echo [ERREUR] Python introuvable. Installez Python 3.11+ depuis python.org
     echo Cochez "Add Python to PATH" lors de l'installation.
-    pause
-    exit /b 1
+    pause & exit /b 1
 )
+for /f "tokens=2" %%v in ('python --version 2^>^&1') do set PY_VER=%%v
+echo  Python detecte : %PY_VER%
 
-:: ── Creer .env si absent ───────────────────────────────────────
+:: ── Creer .env si absent ─────────────────────────────────────
 if not exist ".env" (
-    echo  Creation du fichier .env...
-    copy ".env.example" ".env" >nul 2>&1
-    echo  Fichier .env cree.
+    if exist ".env.example" (
+        copy ".env.example" ".env" >nul
+        echo  Fichier .env cree depuis .env.example
+    )
 )
 
-:: ── Installer les dependances ──────────────────────────────────
-echo  Installation des dependances (patience)...
-python -m pip install fastapi "uvicorn[standard]" sqlalchemy "python-jose[cryptography]" bcrypt python-dotenv "pydantic[email]" httpx --quiet --no-warn-script-location 2>nul
-echo  Dependances OK.
-echo.
+:: ── Creer ou recrér le venv si les packages manquent ─────────
+set VENV_PY=venv\Scripts\python.exe
+set VENV_PIP=venv\Scripts\pip.exe
 
-:: ── Demarrer le serveur ────────────────────────────────────────
-echo  -----------------------------------------------
-echo   Serveur       : http://127.0.0.1:8000
-echo   Documentation : http://127.0.0.1:8000/docs
-echo   Login demo    : demo@smartagri.com
-echo   Mot de passe  : Demo1234!
-echo  -----------------------------------------------
-echo.
-echo  Ouvrez le fichier suivant dans votre navigateur :
-echo  %~dp0frontend\login\index.html
-echo.
-echo  Appuyez sur CTRL+C pour arreter le serveur.
-echo.
+if not exist "%VENV_PY%" (
+    echo  Creation du virtualenv...
+    python -m venv venv
+)
 
-python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
-
+:: Verifier que fastapi est installe dans le venv
+%VENV_PY% -c "import fastapi" >nul 2>&1
 if errorlevel 1 (
-    echo.
-    echo [ERREUR] Le serveur a rencontre un probleme.
-    echo Verifiez les messages ci-dessus pour plus de details.
+    echo  Installation des dependances (1-2 minutes la premiere fois)...
+    %VENV_PIP% install --upgrade pip --quiet
+    %VENV_PIP% install ^
+        fastapi ^
+        "uvicorn[standard]" ^
+        sqlalchemy ^
+        "python-jose[cryptography]" ^
+        "bcrypt" ^
+        python-dotenv ^
+        "pydantic[email]" ^
+        httpx ^
+        --quiet --no-warn-script-location
+    if errorlevel 1 (
+        echo [ERREUR] Installation echouee. Verifiez votre connexion internet.
+        pause & exit /b 1
+    )
+    echo  Dependances installees.
 )
 
 echo.
+echo  -----------------------------------------------
+echo   API Backend   : http://localhost:8000
+echo   Documentation : http://localhost:8000/docs
+echo.
+echo   >> Ouvrez CE lien dans votre navigateur <<
+echo   http://localhost:8000/static/../../../frontend/login/index.html
+echo.
+echo   Ou ouvrez directement ce fichier :
+echo   %~dp0frontend\login\index.html
+echo.
+echo   Compte demo : demo@smartagri.com / Demo1234!
+echo  -----------------------------------------------
+echo.
+echo  Appuyez sur CTRL+C pour arreter.
+echo.
+
+:: ── Demarrer uvicorn avec le venv ────────────────────────────
+%VENV_PY% -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+
+echo.
+echo  Serveur arrete.
 pause
