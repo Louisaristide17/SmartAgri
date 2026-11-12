@@ -9,7 +9,7 @@ const API_BASE = (() => {
   const h = window.location.hostname;
   const proto = window.location.protocol;
   if (proto === 'file:' || h === 'localhost' || h === '127.0.0.1') {
-    return 'http://localhost:8001';
+    return 'http://localhost:3000';
   }
   return 'https://smartagri-api-d3ga.onrender.com';
 })();
