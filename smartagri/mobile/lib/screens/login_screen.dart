@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen>
           Wrap(spacing: 8, runSpacing: 8, children: [
             _pill('📊 Prédiction IA'),
             _pill('🗺️ Parcelles GPS'),
-            _pill('🤖 AgriBot'),
+            _pill('👵🏻 AgriBot'),
             _pill('🌦️ Météo'),
           ]),
         ],
@@ -394,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen>
             const SizedBox(height: 14),
 
             SmartTextField(
-              label: 'Téléphone (optionnel)', hint: '+221 77 000 00 00',
+              label: 'Téléphone (optionnel)', hint: '+225 07 00 00 00 00',
               prefixIcon: '📞', controller: _phoneCtrl,
               keyboardType: TextInputType.phone,
             ),

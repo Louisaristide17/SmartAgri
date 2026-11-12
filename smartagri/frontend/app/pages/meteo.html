@@ -339,7 +339,7 @@ requireAuth();
 initTopbar();
 setActiveNav('meteo');
 
-let currentVille     = 'Dakar';
+let currentVille     = 'Abidjan';
 let currentMeteoData = null;   // données courantes pour le lien prédiction
 
 /* ── Charger météo d'une ville ── */
@@ -476,9 +476,9 @@ function updateAgroTips(current, previsions) {
   else if (current.temperature > 26)
     tips.push({icon:'✅',title:'Température optimale',
       text:`${current.temperature}°C — Idéal pour maïs, riz, arachide. Bonnes conditions de croissance.`});
-  else
+  else if (current.temperature < 24)
     tips.push({icon:'🌿',title:'Températures fraîches',
-      text:`${current.temperature}°C. Le mil et le sorgho s'adaptent bien. Retardez les semis du riz si possible.`});
+      text:`${current.temperature}°C. Le maïs et le riz s'adaptent bien. Vérifiez la croissance du cacao et des jeunes plants.`});
 
   // Pluviométrie prévisions
   if (totalPluie > 80)

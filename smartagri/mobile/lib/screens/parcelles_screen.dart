@@ -101,10 +101,11 @@ class _ParcellesScreenState extends State<ParcellesScreen> {
               children: [
                 _FilterChip('Toutes',    'all'),
                 _FilterChip('Actives',   'active'),
-                _FilterChip('🌽 Maïs',  'mais'),
-                _FilterChip('🌾 Riz',   'riz'),
-                _FilterChip('🥜 Arachide','arachide'),
-                _FilterChip('🌿 Mil',   'mil'),
+                _FilterChip('� Cacao',   'cacao'),
+                _FilterChip('�🌽 Maïs',    'mais'),
+                _FilterChip('🌾 Riz',     'riz'),
+                _FilterChip('� Manioc',  'manioc'),
+                _FilterChip('� Igname',  'igname'),
               ].map((f) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: FilterChip(
@@ -443,7 +444,7 @@ class _ParcelleFormState extends State<_ParcelleForm> {
                   })),
                 const SizedBox(width: 12),
                 Expanded(child: SmartTextField(
-                  label: 'Ville / Zone', hint: 'Ex: Thiès',
+                  label: 'Ville / Zone', hint: 'Ex: Bouaké, Daloa, Korhogo',
                   controller: _villeCtrl)),
               ]),
               const SizedBox(height: 14),
@@ -454,9 +455,16 @@ class _ParcelleFormState extends State<_ParcelleForm> {
                     color: AppColors.gray700)),
               const SizedBox(height: 8),
               _buildDropdown('Culture', _culture, {
-                'mais': '🌽 Maïs', 'riz': '🌾 Riz', 'arachide': '🥜 Arachide',
-                'sorgho': '🌿 Sorgho', 'mil': '🌿 Mil',
-                'coton': '☁️ Coton', 'manioc': '🥔 Manioc',
+                'cacao':    '🍫 Cacao',
+                'cafe':     '☕ Café',
+                'mais':     '🌽 Maïs',
+                'riz':      '🌾 Riz',
+                'manioc':   '� Manioc',
+                'igname':   '� Igname',
+                'coton':    '☁️ Coton',
+                'anacarde': '� Anacarde',
+                'palmier':  '🌴 Palmier à huile',
+                'hevea':    '🌳 Hévéa',
               }, (v) => setState(() => _culture = v!)),
               const SizedBox(height: 14),
 

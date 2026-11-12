@@ -22,14 +22,14 @@ class _AgribotScreenState extends State<AgribotScreen> {
 
   // ── Questions suggérées ────────────────────────────
   static const List<Map<String, String>> _suggestions = [
-    {'icon': '🌽', 'text': 'Quels engrais pour le maïs ?'},
+    {'icon': '🍫', 'text': 'Quels engrais pour le cacao en Côte d\'Ivoire ?'},
     {'icon': '🌾', 'text': 'Quelle est la meilleure période pour semer le riz ?'},
-    {'icon': '🌍', 'text': 'Comment améliorer la fertilité d\'un sol argileux ?'},
-    {'icon': '🥜', 'text': 'Mon arachide a des taches sur les feuilles, que faire ?'},
-    {'icon': '💧', 'text': 'Comment calculer le besoin en eau de mon maïs ?'},
-    {'icon': '🌵', 'text': 'Quelles cultures résistent le mieux à la sécheresse ?'},
-    {'icon': '📅', 'text': 'Quel est le calendrier cultural pour le Sénégal ?'},
-    {'icon': '🦗', 'text': 'Comment lutter contre les criquets pèlerins ?'},
+    {'icon': '🍠', 'text': 'Comment améliorer le rendement de l\'igname ?'},
+    {'icon': '🥜', 'text': 'Mon anacarde a des maladies, que faire ?'},
+    {'icon': '💧', 'text': 'Comment calculer le besoin en eau du maïs ?'},
+    {'icon': '🌴', 'text': 'Conseils pour le palmier à huile au Sud CI ?'},
+    {'icon': '📅', 'text': 'Quel est le calendrier cultural pour la Côte d\'Ivoire ?'},
+    {'icon': '🦠', 'text': 'Comment lutter contre la pourriture brune du cacao ?'},
   ];
 
   @override
@@ -67,14 +67,15 @@ class _AgribotScreenState extends State<AgribotScreen> {
       setState(() {
         _messages.add(ChatMessage(
           role: 'assistant',
-          content: '👋 Bonjour ! Je suis **AgriBot**, votre assistant agricole intelligent.\n\n'
+          content: '👋 Bonjour ! Je suis **AgriBot**, votre assistant agricole pour la 🇨🇮 Côte d\'Ivoire.\n\n'
               'Je peux vous aider sur :\n'
-              '• 🌾 Les cultures et leurs besoins\n'
-              '• 💧 L\'irrigation et la pluviométrie\n'
+              '• 🍫 Le cacao, café et anacarde\n'
+              '• 🌾 Le maïs, riz, manioc et igname\n'
+              '• 💧 L\'irrigation et la pluviométrie locale\n'
               '• 🌿 Les engrais et la fertilité des sols\n'
-              '• 📅 Les calendriers de semis\n'
-              '• 🦠 Les maladies et ravageurs\n\n'
-              'Posez votre question ou appuyez sur une suggestion ci-dessous.',
+              '• 📅 Les calendriers culturaux (Sud, Centre, Nord CI)\n'
+              '• 🦠 Les maladies et ravageurs locaux\n\n'
+              'Posez-moi votre question !',
           createdAt: DateTime.now(),
         ));
         _showSugg = true;
@@ -192,7 +193,7 @@ class _AgribotScreenState extends State<AgribotScreen> {
           width: 36, height: 36,
           decoration: BoxDecoration(
             color: Colors.white24, borderRadius: BorderRadius.circular(18)),
-          child: const Center(child: Text('🤖', style: TextStyle(fontSize: 18))),
+          child: const Center(child: Text('👵🏻', style: TextStyle(fontSize: 18))),
         ),
         const SizedBox(width: 10),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -400,7 +401,7 @@ class _MessageBubble extends StatelessWidget {
               width: 32, height: 32,
               decoration: BoxDecoration(
                 color: AppColors.green100, borderRadius: BorderRadius.circular(16)),
-              child: const Center(child: Text('🤖', style: TextStyle(fontSize: 16))),
+              child: const Center(child: Text('👵🏻', style: TextStyle(fontSize: 16))),
             ),
             const SizedBox(width: 8),
           ],
@@ -489,7 +490,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
           decoration: BoxDecoration(
               color: AppColors.green100,
               borderRadius: BorderRadius.circular(16)),
-          child: const Center(child: Text('🤖', style: TextStyle(fontSize: 16)))),
+          child: const Center(child: Text('👵🏻', style: TextStyle(fontSize: 16)))),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

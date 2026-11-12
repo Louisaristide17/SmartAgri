@@ -75,9 +75,9 @@ def seed_demo():
         if not db.query(User).filter(User.email == "demo@smartagri.com").first():
             demo = User(
                 firstname  = "Jean",
-                lastname   = "Diallo",
+                lastname   = "Koné",
                 email      = "demo@smartagri.com",
-                phone      = "+221 77 000 00 00",
+                phone      = "+225 07 00 00 00 00",
                 role       = "agriculteur",
                 hashed_pwd = hash_password("Demo1234!"),
             )

@@ -156,13 +156,16 @@
             <label>Culture *</label>
             <select id="p-culture" class="select" onchange="updateCultureInfo()">
               <option value="">Choisir…</option>
+              <option value="cacao">🍫 Cacao</option>
+              <option value="cafe">☕ Café</option>
               <option value="mais">🌽 Maïs</option>
               <option value="riz">🌾 Riz</option>
-              <option value="arachide">🥜 Arachide</option>
-              <option value="sorgho">🌿 Sorgho</option>
-              <option value="mil">🌿 Mil</option>
-              <option value="coton">☁️ Coton</option>
               <option value="manioc">🥔 Manioc</option>
+              <option value="igname">🍠 Igname</option>
+              <option value="coton">☁️ Coton</option>
+              <option value="anacarde">🥜 Anacarde</option>
+              <option value="palmier">🌴 Palmier à huile</option>
+              <option value="hevea">🌳 Hévéa</option>
             </select>
             <span class="input-error" id="err-culture"></span>
           </div>
@@ -300,40 +303,55 @@ setActiveNav('prediction');
 
 /* ── Fiches culture ── */
 const CULTURE_INFO = {
+  cacao: {
+    desc: "Le cacao est la 1ère culture d'exportation de la Côte d'Ivoire (1er producteur mondial). Pousse en zone forestière humide.",
+    besoins: ["Pluviométrie : 1 200–2 000 mm/an","Température : 24–28°C","Engrais : NPK 10-18-18 + magnésie, 300–500 kg/ha"],
+    risques: "Pourriture brune (Phytophthora), mirides (capsides), virus Swollen Shoot.",
+  },
+  cafe: {
+    desc: "Le café Robusta est cultivé dans le centre et l'ouest ivoirien. Culture d'ombre ou semi-ombre.",
+    besoins: ["Pluviométrie : 1 200–1 800 mm/an","Température : 22–26°C","Engrais : NPK équilibré, 200–300 kg/ha"],
+    risques: "Scolyte des baies, anthracnose, rouille orangée.",
+  },
   mais: {
-    desc: "Le maïs est la céréale la plus cultivée au Sénégal. Il nécessite une pluviométrie régulière.",
-    besoins: ["Pluviométrie : 450–600 mm/saison","Température : 20–30°C","Engrais : NPK au semis + urée V6"],
-    risques: "Sensible à la sécheresse au stade floraison.",
+    desc: "Le maïs est la principale céréale vivrière en Côte d'Ivoire, cultivée dans toutes les zones.",
+    besoins: ["Pluviométrie : 500–800 mm/saison","Température : 22–32°C","Engrais : NPK 15-15-15 au semis + urée V6"],
+    risques: "Fall Armyworm (Spodoptera), foreur des tiges, Striga.",
   },
   riz: {
-    desc: "Le riz irrigué offre les meilleurs rendements. La culture pluviale dépend de l'hivernage.",
-    besoins: ["Pluviométrie : 600–1200 mm","Température : 22–32°C","Engrais : DAP + urée fractionnée"],
-    risques: "Sensible à la pyriculariose en conditions humides.",
-  },
-  arachide: {
-    desc: "Culture phare du bassin arachidier sénégalais. Fixe l'azote atmosphérique.",
-    besoins: ["Pluviométrie : 300–500 mm","Température : 25–35°C","Faible besoin en azote (fixation)"],
-    risques: "Risque d'aflatoxine si stockage humide.",
-  },
-  sorgho: {
-    desc: "Très résistant à la sécheresse, adapté aux zones sahéliennes.",
-    besoins: ["Pluviométrie : 300–500 mm","Température : 25–35°C","Peu exigeant en engrais"],
-    risques: "Attaqué par les oiseaux à maturité.",
-  },
-  mil: {
-    desc: "Céréale de base des zones sahéliennes. Extrêmement tolérante à la sécheresse.",
-    besoins: ["Pluviométrie : 250–400 mm","Température : 25–35°C","Sol sableux léger préféré"],
-    risques: "Faibles rendements sans engrais.",
-  },
-  coton: {
-    desc: "Culture de rente importante. Demande un encadrement technique.",
-    besoins: ["Pluviométrie : 600–800 mm","Température : 25–35°C","Engrais complet indispensable"],
-    risques: "Nombreux ravageurs, nécessite phytosanitaires homologués.",
+    desc: "Le riz est cultivé en zone pluviale (forêt) et irriguée (Nord, bas-fonds). Forte demande locale.",
+    besoins: ["Pluviométrie : 800–1 200 mm/saison","Température : 22–30°C","Engrais : DAP au semis + urée tallage/épiaison"],
+    risques: "Pyriculariose, borer du riz, virus panachure jaune.",
   },
   manioc: {
-    desc: "Culture vivrière très résistante. Rendements élevés.",
-    besoins: ["Pluviométrie : 600–1200 mm","Température : 25–29°C","Sol bien drainé"],
-    risques: "Toxicité cyanure si mal transformé.",
+    desc: "Le manioc est la culture vivrière la plus consommée en CI. Très résistant à la sécheresse.",
+    besoins: ["Pluviométrie : 750–1 000 mm/an","Température : 25–29°C","Engrais : NPK 13-13-21, 300 kg/ha"],
+    risques: "Mosaïque du manioc (CMD), cochenille farineuse, bactériose.",
+  },
+  igname: {
+    desc: "L'igname est une culture traditionnelle majeure au Centre et au Nord de la CI.",
+    besoins: ["Pluviométrie : 1 000–1 500 mm/an","Température : 25–30°C","Fumure organique + NPK en complément"],
+    risques: "Nématodes, anthracnose, virus de la mosaïque.",
+  },
+  coton: {
+    desc: "Le coton est la principale culture de rente du Nord ivoirien (région de Korhogo).",
+    besoins: ["Pluviométrie : 700–1 000 mm/saison","Température : 25–35°C","Engrais complet + phytosanitaires"],
+    risques: "Nombreux ravageurs (Helicoverpa, Spodoptera), verticilliose.",
+  },
+  anacarde: {
+    desc: "L'anacarde (noix de cajou) est la 1ère exportation agricole du Nord CI. 2ème producteur mondial.",
+    besoins: ["Pluviométrie : 900–1 200 mm/an","Température : 25–35°C","Peu exigeant en engrais"],
+    risques: "Anthracnose, mouche du cajou, termites.",
+  },
+  palmier: {
+    desc: "Le palmier à huile est cultivé dans le Sud CI pour l'huile de palme et les palmistes.",
+    besoins: ["Pluviométrie : 1 500–2 000 mm/an","Température : 24–28°C","NPK 15-15-15 + bore et magnésium"],
+    risques: "Fusariose (Fusarium oxysporum), chrysomèle, oryctes.",
+  },
+  hevea: {
+    desc: "L'hévéa (caoutchouc naturel) est en forte expansion dans le Centre-Ouest de la CI.",
+    besoins: ["Pluviométrie : 1 200–1 800 mm/an","Température : 24–28°C","NPK au premier anneau, puis entretien"],
+    risques: "Oïdium (Oidium heveae), Phytophthora, maladies des encoches.",
   },
 };
 
@@ -371,7 +389,7 @@ async function loadParcellesSelect() {
         data-culture="${p.culture}"
         data-sol="${p.type_sol}"
         data-sup="${p.superficie}"
-        data-ville="${p.ville || 'Dakar'}">${p.nom} (${p.culture}${p.ville ? ' · '+p.ville : ''})</option>`;
+        data-ville="${p.ville || 'Abidjan'}">${p.nom} (${p.culture}${p.ville ? ' · '+p.ville : ''})</option>`;
     });
   } catch(e) {}
 }
@@ -387,7 +405,7 @@ async function prefillFromParcelle() {
   updateCultureInfo();
 
   // Charger la météo de la ville de la parcelle
-  const ville = opt.dataset.ville || 'Dakar';
+  const ville = opt.dataset.ville || 'Abidjan';
   showToast('Chargement météo pour ' + ville + '…', 'info');
   await loadContextMeteo(ville);
   showToast('Paramètres chargés + météo de ' + ville, 'success');
@@ -404,7 +422,7 @@ function prefillFromUrl() {
   if (params.get('pluv') && params.get('source') === 'meteo') {
     const pluv = parseFloat(params.get('pluv'));
     const temp = parseFloat(params.get('temp'));
-    const ville = decodeURIComponent(params.get('ville') || 'Dakar');
+    const ville = decodeURIComponent(params.get('ville') || 'Abidjan');
 
     if (!isNaN(pluv)) {
       const sv = Math.min(2000, Math.max(0, Math.round(pluv)));
@@ -428,8 +446,8 @@ function prefillFromUrl() {
   }
 }
 
-/* ── Météo réelle via Open-Meteo (par ville de la parcelle ou Dakar) ── */
-async function loadContextMeteo(ville = 'Dakar') {
+/* ── Météo réelle via Open-Meteo (par ville de la parcelle ou Abidjan) ── */
+async function loadContextMeteo(ville = 'Abidjan') {
   try {
     const [current, previsions] = await Promise.all([
       ApiMeteo.current(ville),
@@ -510,7 +528,7 @@ async function doPrediction() {
     document.getElementById('result-empty').style.display   = 'none';
     document.getElementById('result-content').style.display = 'block';
 
-    const icons = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+    const icons = {cacao:'🍫',cafe:'☕',mais:'🌽',riz:'🌾',manioc:'🥔',igname:'🍠',coton:'☁️',anacarde:'🥜',palmier:'🌴',hevea:'🌳'};
     document.getElementById('res-rendement').textContent =
       result.rendement_predit.toFixed(2);
     document.getElementById('res-culture').textContent =
@@ -559,7 +577,7 @@ async function loadHistorique() {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:20px;">Aucune prédiction encore</td></tr>';
       return;
     }
-    const icons = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+    const icons = {cacao:'🍫',cafe:'☕',mais:'🌽',riz:'🌾',manioc:'🥔',igname:'🍠',coton:'☁️',anacarde:'🥜',palmier:'🌴',hevea:'🌳'};
     tbody.innerHTML = list.slice(0,10).map(p => `
       <tr>
         <td>${icons[p.culture]||'🌱'} ${p.culture}</td>
@@ -585,7 +603,7 @@ loadHistorique();
 const _urlParams = new URLSearchParams(window.location.search);
 if (_urlParams.get('source') !== 'meteo') {
   // Pas de données météo depuis la page météo → charger automatiquement
-  loadContextMeteo(_urlParams.get('ville') || 'Dakar');
+  loadContextMeteo(_urlParams.get('ville') || 'Abidjan');
 }
 </script>
 </body>

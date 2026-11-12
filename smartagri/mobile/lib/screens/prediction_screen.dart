@@ -42,7 +42,7 @@ class _PredictionScreenState extends State<PredictionScreen>
 
   Future<void> _loadMeteoTemp() async {
     try {
-      final m = await _api.getMeteo('Dakar');
+      final m = await _api.getMeteo('Abidjan');
       final meteo = MeteoModel.fromJson(m);
       setState(() => _temp = meteo.temperature.clamp(10, 45).toDouble());
     } catch (_) {}
@@ -189,8 +189,15 @@ class _PredictionScreenState extends State<PredictionScreen>
   Widget _buildResult() {
     final r = _result!;
     final conf = r.confiance ?? 80;
-    final icon = r.culture == 'mais' ? '🌽' : r.culture == 'riz' ? '🌾'
-        : r.culture == 'arachide' ? '🥜' : '🌱';
+    final icon = r.culture == 'mais' ? '🌽'
+        : r.culture == 'riz'     ? '🌾'
+        : r.culture == 'cacao'   ? '🍫'
+        : r.culture == 'cafe'    ? '☕'
+        : r.culture == 'manioc'  ? '🥔'
+        : r.culture == 'igname'  ? '🍠'
+        : r.culture == 'anacarde'? '🥜'
+        : r.culture == 'coton'   ? '☁️'
+        : '🌱';
 
     // Conseils dynamiques
     final tips = <String>[];
@@ -307,9 +314,10 @@ class _PredictionScreenState extends State<PredictionScreen>
   // ══ Onglet PARAMÈTRES ════════════════════════════
   Widget _buildFormTab() {
     final cultures = {
-      'mais': '🌽 Maïs', 'riz': '🌾 Riz', 'arachide': '🥜 Arachide',
-      'sorgho': '🌿 Sorgho', 'mil': '🌿 Mil',
-      'coton': '☁️ Coton', 'manioc': '🥔 Manioc',
+      'cacao':   '🍫 Cacao',   'cafe':    '☕ Café',
+      'mais':    '🌽 Maïs',    'riz':     '🌾 Riz',
+      'manioc':  '🥔 Manioc',  'igname':  '🍠 Igname',
+      'coton':   '☁️ Coton',   'anacarde':'🥜 Anacarde',
     };
     final sols = {
       'sableux': 'Sableux', 'argileux': 'Argileux',
@@ -500,7 +508,7 @@ class _MeteoContext extends StatelessWidget {
             const Text('Météo actuelle prise en compte',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
                   color: Color(0xFF1E40AF))),
-            Text('Température réelle Dakar : ${temp.toStringAsFixed(0)}°C pré-remplie',
+            Text('Température réelle Abidjan : ${temp.toStringAsFixed(0)}°C pré-remplie',
               style: const TextStyle(fontSize: 12, color: Color(0xFF3B82F6))),
           ],
         )),
@@ -578,8 +586,15 @@ class _HistoriqueRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = prediction;
-    final icon = p.culture == 'mais' ? '🌽' : p.culture == 'riz' ? '🌾'
-        : p.culture == 'arachide' ? '🥜' : '🌱';
+    final icon = p.culture == 'mais' ? '🌽'
+        : p.culture == 'riz'     ? '🌾'
+        : p.culture == 'cacao'   ? '🍫'
+        : p.culture == 'cafe'    ? '☕'
+        : p.culture == 'manioc'  ? '🥔'
+        : p.culture == 'igname'  ? '🍠'
+        : p.culture == 'anacarde'? '🥜'
+        : p.culture == 'coton'   ? '☁️'
+        : '🌱';
     return SmartCard(
       padding: const EdgeInsets.all(12),
       child: Row(children: [

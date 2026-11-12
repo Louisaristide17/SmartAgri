@@ -20,11 +20,12 @@ class _MeteoScreenState extends State<MeteoScreen> {
   bool _loading = true;
 
   final List<String> _villes = [
-    'Dakar', 'Thiès', 'Saint-Louis', 'Ziguinchor', 'Kaolack', 'Tambacounda',
+    'Abidjan', 'Yamoussoukro', 'Bouaké', 'Daloa', 'San-Pédro',
+    'Korhogo', 'Man', 'Gagnoa',
   ];
 
   @override
-  void initState() { super.initState(); _load('Dakar'); }
+  void initState() { super.initState(); _load('Abidjan'); }
 
   @override
   void dispose() { _searchCtrl.dispose(); super.dispose(); }
@@ -391,7 +392,7 @@ class _MeteoScreenState extends State<MeteoScreen> {
               controller: _searchCtrl,
               autofocus: true,
               decoration: const InputDecoration(
-                hintText: 'Ex: Louga, Matam, Kolda…',
+                hintText: 'Ex: Bondoukou, Divo, Abengourou…',
                 prefixIcon: Icon(Icons.search)),
               onSubmitted: (v) {
                 if (v.trim().isNotEmpty) {

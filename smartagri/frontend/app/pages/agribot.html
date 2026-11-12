@@ -274,26 +274,26 @@
       <div class="card">
         <div class="card-title" style="margin-bottom:12px;">💡 Questions suggérées</div>
         <div class="suggest-list">
-          <button class="suggest-btn" onclick="suggest('Quels engrais pour le maïs ?')">
-            <span class="suggest-icon">🌽</span>Engrais pour le maïs
+          <button class="suggest-btn" onclick="suggest('Quels engrais pour le cacao en Côte d\'Ivoire ?')">
+            <span class="suggest-icon">🍫</span>Engrais pour le cacao
           </button>
-          <button class="suggest-btn" onclick="suggest('Quelle est la meilleure période pour semer le riz ?')">
+          <button class="suggest-btn" onclick="suggest('Quelle est la meilleure période pour semer le riz en Côte d\'Ivoire ?')">
             <span class="suggest-icon">🌾</span>Période de semis du riz
           </button>
-          <button class="suggest-btn" onclick="suggest('Comment améliorer la fertilité de mon sol argileux ?')">
-            <span class="suggest-icon">🌍</span>Fertilité sol argileux
+          <button class="suggest-btn" onclick="suggest('Comment améliorer la fertilité de mon sol ferrallitique ?')">
+            <span class="suggest-icon">🌍</span>Fertilité sol ivoirien
           </button>
-          <button class="suggest-btn" onclick="suggest('Mon arachide montre des taches sur les feuilles, que faire ?')">
-            <span class="suggest-icon">🥜</span>Maladies de l'arachide
+          <button class="suggest-btn" onclick="suggest('Mon anacarde a des maladies, que faire ?')">
+            <span class="suggest-icon">🥜</span>Maladies de l'anacarde
           </button>
-          <button class="suggest-btn" onclick="suggest('Comment calculer le besoin en irrigation de mon maïs ?')">
+          <button class="suggest-btn" onclick="suggest('Comment calculer le besoin en irrigation du maïs en CI ?')">
             <span class="suggest-icon">💧</span>Besoin en irrigation
           </button>
-          <button class="suggest-btn" onclick="suggest('Quelles cultures résistent le mieux à la sécheresse ?')">
-            <span class="suggest-icon">🌵</span>Cultures résistantes
+          <button class="suggest-btn" onclick="suggest('Quelles cultures sont adaptées au Nord de la Côte d\'Ivoire ?')">
+            <span class="suggest-icon">🌴</span>Cultures du Nord CI
           </button>
-          <button class="suggest-btn" onclick="suggest('Comment lutter contre les criquets pèlerins ?')">
-            <span class="suggest-icon">🦗</span>Criquets pèlerins
+          <button class="suggest-btn" onclick="suggest('Comment lutter contre la pourriture brune du cacao ?')">
+            <span class="suggest-icon">🍫</span>Pourriture brune cacao
           </button>
         </div>
       </div>
@@ -494,13 +494,15 @@ function exportChat() {
 function showWelcome() {
   const name = user?.firstname || 'agriculteur';
   renderMessage('assistant',
-    `👋 Bonjour **${name}** ! Je suis **AgriBot**, votre assistant agricole intelligent.\n\n` +
+    `👋 Bonjour **${name}** ! Je suis **AgriBot**, votre assistant agricole intelligent pour la 🇨🇮 Côte d'Ivoire.\n\n` +
     `Je suis là pour vous aider avec :\n` +
-    `• 🌾 **Cultures** – conseils de semis, engrais, irrigation\n` +
-    `• 🦠 **Maladies** – diagnostic et traitement\n` +
-    `• 📅 **Calendrier** – périodes optimales\n` +
-    `• 🌍 **Sols** – fertilité et amendements\n\n` +
-    `Posez-moi votre question ou cliquez sur une suggestion à droite.`
+    `• 🍫 **Cacao, café, anacarde** — cultures de rente ivoiriennes\n` +
+    `• 🌾 **Maïs, riz, manioc, igname** — cultures vivrières\n` +
+    `• 💧 **Irrigation et pluviométrie** locale\n` +
+    `• 🌿 **Engrais et fertilité** des sols ivoiriens\n` +
+    `• 📅 **Calendriers culturaux** (Sud, Centre, Nord CI)\n` +
+    `• 🦠 **Maladies et ravageurs** locaux\n\n` +
+    `Posez-moi votre question agricole !`
   );
 }
 

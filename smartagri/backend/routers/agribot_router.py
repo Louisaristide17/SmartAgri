@@ -1,5 +1,6 @@
 """
 Route AgriBot — assistant IA agricole.
+Spécialisé sur l'agriculture en Côte d'Ivoire.
 Utilise OpenAI GPT si la clé est configurée, sinon une base de règles locale.
 """
 from fastapi import APIRouter, Depends, HTTPException
@@ -21,93 +22,137 @@ KNOWLEDGE_BASE = [
     {
         "patterns": [r"rende?ment", r"production", r"récolte"],
         "response": (
-            "📊 **Rendements moyens indicatifs au Sénégal :**\n\n"
-            "| Culture    | Rendement moyen |\n"
-            "|------------|-----------------|\n"
-            "| Maïs       | 2.5 – 4.0 t/ha  |\n"
-            "| Riz        | 3.5 – 5.0 t/ha  |\n"
-            "| Arachide   | 1.5 – 2.5 t/ha  |\n"
-            "| Mil        | 0.8 – 1.5 t/ha  |\n"
-            "| Sorgho     | 1.0 – 2.0 t/ha  |\n\n"
+            "📊 **Rendements moyens indicatifs en Côte d'Ivoire :**\n\n"
+            "| Culture    | Rendement moyen  |\n"
+            "|------------|------------------|\n"
+            "| Cacao      | 0.5 – 1.2 t/ha   |\n"
+            "| Café       | 0.4 – 0.8 t/ha   |\n"
+            "| Maïs       | 1.5 – 3.5 t/ha   |\n"
+            "| Riz        | 2.0 – 4.5 t/ha   |\n"
+            "| Manioc     | 8.0 – 15.0 t/ha  |\n"
+            "| Igname     | 5.0 – 12.0 t/ha  |\n"
+            "| Banane     | 10.0 – 25.0 t/ha |\n"
+            "| Coton      | 1.0 – 2.0 t/ha   |\n\n"
             "💡 Utilisez l'outil **Prédiction** pour un calcul personnalisé à votre parcelle."
         )
     },
     {
         "patterns": [r"engrais", r"fertilisant", r"azote", r"NPK"],
         "response": (
-            "🌿 **Recommandations en engrais :**\n\n"
-            "• **Maïs** : Urée (46-0-0) à 50 kg/ha au stade V6, NPK 15-15-15 au semis\n"
-            "• **Riz** : DAP au semis + urée en fractionnement (tallage + montaison)\n"
-            "• **Arachide** : Peu d'azote (fixation symbiotique) — apporter phosphore et soufre\n\n"
-            "⚠️ Respectez les doses agronomiques pour éviter la pollution des nappes phréatiques."
+            "🌿 **Recommandations en engrais pour la Côte d'Ivoire :**\n\n"
+            "• **Cacao** : NPK 10-18-18 + magnésie, 300–500 kg/ha/an en 2 apports\n"
+            "• **Maïs** : NPK 15-15-15 au semis (200 kg/ha) + urée au stade V6\n"
+            "• **Riz** : DAP au semis + urée en 2 fractions (tallage et épiaison)\n"
+            "• **Manioc** : NPK 13-13-21 (potassium élevé) pour améliorer les tubercules\n"
+            "• **Igname** : Fumure organique privilégiée + NPK en complément\n\n"
+            "⚠️ Respectez les doses recommandées par l'ANADER pour éviter la pollution des sols ivoiriens."
         )
     },
     {
         "patterns": [r"irrigation", r"eau", r"arrosage", r"pluviom"],
         "response": (
-            "💧 **Besoins en eau des cultures :**\n\n"
-            "• **Maïs** : 450-600 mm/saison — critique au stade floraison\n"
-            "• **Riz irrigué** : 800-1200 mm/saison\n"
-            "• **Arachide** : 300-500 mm/saison\n"
-            "• **Mil/Sorgho** : 300-400 mm (très résistants à la sécheresse)\n\n"
-            "🌧️ Consultez la météo dans le menu pour planifier vos irrigations."
+            "💧 **Besoins en eau des cultures en Côte d'Ivoire :**\n\n"
+            "• **Cacao** : 1 200–2 000 mm/an — zones forestières humides\n"
+            "• **Maïs** : 500–800 mm/saison — critique à la floraison\n"
+            "• **Riz pluvial** : 800–1 200 mm/saison\n"
+            "• **Manioc** : 750–1 000 mm/an — résistant à la sécheresse\n"
+            "• **Coton** (Nord CI) : 700–1 000 mm/saison\n\n"
+            "🌧️ Le Sud reçoit 1 400–2 500 mm/an (2 saisons), le Nord 900–1 200 mm (1 saison).\n"
+            "Consultez la météo dans le menu pour planifier vos irrigations."
         )
     },
     {
-        "patterns": [r"semis", r"planter", r"planting", r"période", r"quand"],
+        "patterns": [r"semis", r"planter", r"planting", r"période", r"quand", r"calendrier"],
         "response": (
-            "📅 **Calendrier cultural (Sénégal) :**\n\n"
-            "• **Mil/Sorgho** : juin – juillet (hivernage)\n"
-            "• **Maïs** : juillet – août\n"
-            "• **Arachide** : juin – juillet\n"
-            "• **Riz pluvial** : juillet – août\n"
-            "• **Riz irrigué** (vallée du fleuve) : mars – avril ou octobre – novembre\n\n"
-            "📍 Les dates varient selon votre zone agro-écologique."
+            "📅 **Calendrier cultural en Côte d'Ivoire :**\n\n"
+            "**Zone Sud (forêt, 2 saisons des pluies) :**\n"
+            "• Grande saison : mars – juillet\n"
+            "• Petite saison : septembre – novembre\n"
+            "• **Cacao/Café** : entretien toute l'année, récolte oct – mars\n"
+            "• **Maïs** : semis mars-avril (1ère saison) ou sept (2ème saison)\n"
+            "• **Riz pluvial** : avril – mai\n\n"
+            "**Zone Centre/Nord (savane, 1 saison) :**\n"
+            "• Saison des pluies : mai – octobre\n"
+            "• **Maïs** : semis mai – juin\n"
+            "• **Coton** : semis juin – juillet\n"
+            "• **Igname** : planting mars – avril\n\n"
+            "📍 Consultez l'ANADER de votre région pour les recommandations locales."
         )
     },
     {
-        "patterns": [r"maladie", r"parasite", r"ravageur", r"insecte", r"champignon"],
+        "patterns": [r"maladie", r"parasite", r"ravageur", r"insecte", r"champignon", r"virus"],
         "response": (
-            "🦠 **Principales maladies et ravageurs :**\n\n"
-            "• **Maïs** : Striga (adventice), foreur des tiges, rouille\n"
-            "• **Riz** : Pyriculariose, panachure jaune, borer\n"
-            "• **Arachide** : Rosette (virus), cercosporiose, aflatoxine\n\n"
-            "🔬 En cas de doute, prenez une photo de vos plantes et consultez un technicien agricole local."
+            "🦠 **Principales maladies et ravageurs en Côte d'Ivoire :**\n\n"
+            "• **Cacao** : Pourriture brune (Phytophthora), Swollen Shoot (virus), mirides (capsides)\n"
+            "• **Café** : Scolyte des baies, anthracnose, rouille orangée\n"
+            "• **Maïs** : Foreur des tiges (Busseola), Fall Armyworm (Spodoptera), Striga\n"
+            "• **Riz** : Pyriculariose, borer du riz, virus de la panachure jaune\n"
+            "• **Manioc** : Cochenille farineuse, mosaïque du manioc (CMD), bactériose\n\n"
+            "🔬 En cas de doute, contactez l'ANADER (Agence Nationale d'Appui au Développement Rural)."
         )
     },
     {
-        "patterns": [r"sol", r"terre", r"argile", r"sableux", r"fertilit"],
+        "patterns": [r"sol", r"terre", r"argile", r"sableux", r"fertilit", r"latérit"],
         "response": (
-            "🌍 **Types de sols au Sénégal :**\n\n"
-            "• **Sol sableux (Dior)** : facile à travailler, faible rétention d'eau — bon pour arachide et mil\n"
-            "• **Sol argileux (Deck)** : forte rétention d'eau — excellent pour riz et maraîchage\n"
-            "• **Sol limoneux** : polyvalent, bon pour maïs et légumineuses\n"
-            "• **Sol latéritique** : peu fertile, nécessite amendements organiques\n\n"
-            "💡 Un test de sol en laboratoire coûte ~5 000 FCFA et peut doubler votre rendement."
+            "🌍 **Types de sols en Côte d'Ivoire :**\n\n"
+            "• **Sol ferrallitique** (dominant, 70%) : bon pour cacao, café, hévéa — pH acide à corriger\n"
+            "• **Sol hydromorphe** (bas-fonds) : excellent pour le riz irrigué\n"
+            "• **Sol sableux côtier** : idéal pour cocotier, palmier à huile, maraîchage\n"
+            "• **Sol gravillonnaire** (Nord) : pauvre, nécessite amendements — adapté au coton\n"
+            "• **Sol alluvionnaire** (vallées) : très fertile, polyvalent\n\n"
+            "💡 Un test de sol coûte ~15 000–30 000 FCFA à l'ANADER. Il peut doubler votre rendement."
         )
     },
     {
-        "patterns": [r"météo", r"pluie", r"saison", r"hivernage", r"température"],
+        "patterns": [r"météo", r"pluie", r"saison", r"climat", r"température", r"sécheresse"],
         "response": (
             "🌦️ **Consultez la section Météo** pour les prévisions en temps réel.\n\n"
-            "Au Sénégal, on distingue :\n"
-            "• **Saison des pluies (hivernage)** : juin – octobre\n"
-            "• **Saison sèche froide** : novembre – février\n"
-            "• **Saison sèche chaude** : mars – juin\n\n"
-            "La variabilité climatique actuelle rend la prévision météo indispensable."
+            "**Climat de la Côte d'Ivoire :**\n"
+            "• **Zone Sud (côtière)** : 2 saisons sèches / 2 saisons des pluies\n"
+            "  - Grande saison des pluies : avril – juillet\n"
+            "  - Petite saison sèche : août\n"
+            "  - Petite saison des pluies : sept – novembre\n"
+            "  - Grande saison sèche : décembre – mars\n\n"
+            "• **Zone Nord (savane)** : 1 saison des pluies (mai–oct) + harmattan (nov–mars)\n\n"
+            "La variabilité climatique est forte : utilisez la météo pour planifier vos travaux."
+        )
+    },
+    {
+        "patterns": [r"cacao", r"café", r"hévéa", r"palmier", r"anacarde", r"cajou"],
+        "response": (
+            "🍫 **Cultures de rente en Côte d'Ivoire :**\n\n"
+            "• **Cacao** : 1er producteur mondial — Centre-Ouest, Sud-Ouest (Soubré, Daloa, San-Pédro)\n"
+            "• **Café** : Centre et Ouest — variétés Robusta principalement\n"
+            "• **Anacarde (cajou)** : Nord (Korhogo, Bondoukou) — 2ème producteur mondial\n"
+            "• **Hévéa** : Centre et Sud-Ouest — caoutchouc naturel en forte expansion\n"
+            "• **Palmier à huile** : Sud — huile de palme et palmiste\n\n"
+            "🌱 Contactez le FIRCA ou votre coopérative locale pour les intrants subventionnés."
         )
     },
     {
         "patterns": [r"bonjour", r"salut", r"hello", r"bonsoir", r"hi"],
         "response": (
-            "👋 **Bonjour ! Je suis AgriBot, votre assistant agricole.**\n\n"
+            "👋 **Bonjour ! Je suis AgriBot, votre assistant agricole pour la Côte d'Ivoire.**\n\n"
             "Je peux vous aider sur :\n"
-            "• 🌾 Les cultures et leurs besoins\n"
-            "• 💧 L'irrigation et la pluviométrie\n"
+            "• 🍫 Le cacao, café, anacarde et autres cultures ivoiriennes\n"
+            "• 🌾 Le maïs, riz, manioc, igname\n"
+            "• 💧 L'irrigation et la pluviométrie locale\n"
             "• 🌿 Les engrais et la fertilité des sols\n"
-            "• 📅 Les calendriers de semis\n"
+            "• 📅 Les calendriers culturaux (Sud, Centre, Nord)\n"
             "• 🦠 Les maladies et ravageurs\n\n"
             "Posez-moi votre question !"
+        )
+    },
+    {
+        "patterns": [r"anader", r"firca", r"coopérative", r"subvention", r"aide"],
+        "response": (
+            "🏛️ **Structures d'appui agricole en Côte d'Ivoire :**\n\n"
+            "• **ANADER** : Agence Nationale d'Appui au Développement Rural — conseils techniques gratuits\n"
+            "• **FIRCA** : Fonds Interprofessionnel pour la Recherche et le Conseil Agricoles\n"
+            "• **CCC** : Conseil du Coton et de l'Anacarde (Nord)\n"
+            "• **CGFCC** : Conseil Café-Cacao — régulation de la filière\n"
+            "• **COOPAGRI CI** : réseau de coopératives agricoles\n\n"
+            "📞 ANADER : +225 27 22 48 36 00 — présent dans toutes les régions."
         )
     },
     {
@@ -139,10 +184,12 @@ async def get_openai_response(messages: list, user_message: str) -> str:
         import openai
         client = openai.AsyncOpenAI(api_key=OPENAI_KEY)
 
-        system_prompt = """Tu es AgriBot, un assistant agricole expert spécialisé sur l'Afrique de l'Ouest.
-Tu aides les agriculteurs avec des conseils pratiques sur les cultures, les sols, l'irrigation,
-les engrais, les maladies et le calendrier cultural. Réponds en français, sois précis et bienveillant.
-Ne donne pas de conseils sur les pesticides non homologués."""
+        system_prompt = """Tu es AgriBot, un assistant agricole expert spécialisé sur la Côte d'Ivoire.
+Tu aides les agriculteurs ivoiriens avec des conseils pratiques sur les cultures locales (cacao, café,
+anacarde, maïs, riz, manioc, igname, coton, palmier à huile, hévéa), les sols, l'irrigation,
+les engrais, les maladies et le calendrier cultural ivoirien. Cite les structures locales (ANADER,
+FIRCA, CCC, CGFCC) quand c'est utile. Réponds en français, sois précis et bienveillant.
+Ne donne pas de conseils sur les pesticides non homologués en Côte d'Ivoire."""
 
         history = [{"role": "system", "content": system_prompt}]
         for msg in messages[-10:]:  # Garder les 10 derniers messages
