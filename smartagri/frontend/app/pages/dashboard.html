@@ -395,7 +395,7 @@ async function loadPredictions() {
 
     const last5  = preds.slice(0, 5).reverse();
     const maxVal = Math.max(...last5.map(p => p.rendement_predit), 1);
-    const cultureIcons = { mais:'🌽', riz:'🌾', arachide:'🥜', sorgho:'🌿', mil:'🌿', coton:'☁️', manioc:'🥔' };
+    const cultureIcons = { cacao:'🍫', cafe:'☕', mais:'🌽', riz:'🌾', manioc:'🥔', igname:'🍠', coton:'☁️', anacarde:'🥜', palmier:'🌴', hevea:'🌳', arachide:'🥜', sorgho:'🌿', mil:'🌿' };
 
     chart.innerHTML = last5.map(p => {
       const pct = (p.rendement_predit / maxVal) * 100;

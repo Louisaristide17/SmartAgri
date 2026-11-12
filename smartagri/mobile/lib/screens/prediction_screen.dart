@@ -17,10 +17,10 @@ class _PredictionScreenState extends State<PredictionScreen>
   final _api = ApiService();
 
   // ── Valeurs des sliders ──
-  String  _culture   = 'mais';
-  String  _sol       = 'sableux';
+  String  _culture   = 'cacao';
+  String  _sol       = 'argileux';
   double  _superficie = 1.0;
-  double  _pluv      = 450;
+  double  _pluv      = 1200;
   double  _temp      = 26;
   double  _engrais   = 50;
 
@@ -320,8 +320,11 @@ class _PredictionScreenState extends State<PredictionScreen>
       'coton':   '☁️ Coton',   'anacarde':'🥜 Anacarde',
     };
     final sols = {
-      'sableux': 'Sableux', 'argileux': 'Argileux',
-      'limoneux': 'Limoneux', 'lateritique': 'Latéritique',
+      'ferrallitique': 'Ferrallitique',
+      'argileux':  'Argileux',
+      'limoneux':  'Limoneux',
+      'sableux':   'Sableux',
+      'lateritique': 'Latéritique',
     };
 
     return SingleChildScrollView(
@@ -430,10 +433,10 @@ class _PredictionScreenState extends State<PredictionScreen>
                 _SliderField(
                   label: '💧 Pluviométrie',
                   value: _pluv,
-                  min: 0, max: 2000, divisions: 200,
+                  min: 0, max: 3000, divisions: 300,
                   unit: 'mm',
                   minLabel: 'Sec',
-                  maxLabel: 'Très humide',
+                  maxLabel: 'Très humide (3000mm)',
                   onChanged: (v) => setState(() => _pluv = v),
                 ),
                 const SizedBox(height: 16),

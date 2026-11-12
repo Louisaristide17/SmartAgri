@@ -382,8 +382,8 @@ class _ParcelleFormState extends State<_ParcelleForm> {
   final _supCtrl  = TextEditingController();
   final _villeCtrl= TextEditingController();
   final _descCtrl = TextEditingController();
-  String _culture = 'mais';
-  String _sol     = 'sableux';
+  String _culture = 'cacao';
+  String _sol     = 'argileux';
   String _statut  = 'active';
   bool _saving    = false;
 

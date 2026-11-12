@@ -134,7 +134,7 @@ async def fetch_open_meteo_current(lat: float, lon: float) -> dict:
                     "wind_speed_10m",
                     "wind_gusts_10m",
                 ]),
-                "timezone": "Africa/Dakar",
+                "timezone": "Africa/Abidjan",
             }
         )
     resp.raise_for_status()
@@ -161,7 +161,7 @@ async def fetch_open_meteo_forecast(lat: float, lon: float) -> dict:
                     "wind_speed_10m_max",
                     "et0_fao_evapotranspiration",
                 ]),
-                "timezone":  "Africa/Dakar",
+                "timezone":  "Africa/Abidjan",
                 "forecast_days": 7,
             }
         )

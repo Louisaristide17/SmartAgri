@@ -215,13 +215,16 @@
               <label>Culture *</label>
               <select id="f-culture" class="select">
                 <option value="">Choisir…</option>
+                <option value="cacao">🍫 Cacao</option>
+                <option value="cafe">☕ Café</option>
                 <option value="mais">🌽 Maïs</option>
                 <option value="riz">🌾 Riz</option>
-                <option value="arachide">🥜 Arachide</option>
-                <option value="sorgho">🌿 Sorgho</option>
-                <option value="mil">🌿 Mil</option>
-                <option value="coton">☁️ Coton</option>
                 <option value="manioc">🥔 Manioc</option>
+                <option value="igname">🍠 Igname</option>
+                <option value="coton">☁️ Coton</option>
+                <option value="anacarde">🥜 Anacarde</option>
+                <option value="palmier">🌴 Palmier à huile</option>
+                <option value="hevea">🌳 Hévéa</option>
               </select>
               <span class="input-error" id="err-culture"></span>
             </div>
@@ -229,9 +232,11 @@
               <label>Type de sol *</label>
               <select id="f-sol" class="select">
                 <option value="">Choisir…</option>
-                <option value="sableux">Sableux</option>
+                <option value="ferrallitique">Ferrallitique (dominant CI)</option>
                 <option value="argileux">Argileux</option>
+                <option value="hydromorphe">Hydromorphe (bas-fonds)</option>
                 <option value="limoneux">Limoneux</option>
+                <option value="sableux">Sableux</option>
                 <option value="lateritique">Latéritique</option>
               </select>
               <span class="input-error" id="err-sol"></span>
@@ -244,15 +249,15 @@
           <div class="form-grid">
             <div class="field">
               <label>Ville / Zone</label>
-              <input type="text" id="f-ville" class="input" placeholder="Ex: Thiès"/>
+              <input type="text" id="f-ville" class="input" placeholder="Ex: Bouaké, Daloa, Korhogo"/>
             </div>
             <div class="field">
               <label>Latitude</label>
-              <input type="number" id="f-lat" class="input" placeholder="Ex: 14.7924" step="any"/>
+              <input type="number" id="f-lat" class="input" placeholder="Ex: 5.3600" step="any"/>
             </div>
             <div class="field">
               <label>Longitude</label>
-              <input type="number" id="f-lon" class="input" placeholder="Ex: -17.4471" step="any"/>
+              <input type="number" id="f-lon" class="input" placeholder="Ex: -4.0083" step="any"/>
             </div>
             <div class="field">
               <label>Description</label>
@@ -301,11 +306,11 @@ requireAuth();
 initTopbar();
 setActiveNav('parcelles');
 
-const CULTURE_ICONS  = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+const CULTURE_ICONS  = {cacao:'🍫',cafe:'☕',mais:'🌽',riz:'🌾',manioc:'🥔',igname:'🍠',coton:'☁️',anacarde:'🥜',palmier:'🌴',hevea:'🌳',arachide:'🥜',sorgho:'🌿',mil:'🌿'};
 const STATUT_LABELS  = {active:'active',en_repos:'en_repos',recoltee:'recoltee'};
 const STATUT_BADGES  = {active:'badge-green',en_repos:'badge-yellow',recoltee:'badge-blue'};
 const STATUT_FR      = {active:'Active',en_repos:'En repos',recoltee:'Récoltée'};
-const SOL_FR         = {sableux:'Sableux',argileux:'Argileux',limoneux:'Limoneux',lateritique:'Latéritique'};
+const SOL_FR         = {ferrallitique:'Ferrallitique',argileux:'Argileux',hydromorphe:'Hydromorphe',limoneux:'Limoneux',sableux:'Sableux',lateritique:'Latéritique',alluvionnaire:'Alluvionnaire'};
 
 let allParcelles = [];
 let currentFilter = 'all';

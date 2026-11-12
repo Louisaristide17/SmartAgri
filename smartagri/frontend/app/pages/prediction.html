@@ -173,9 +173,11 @@
             <label>Type de sol *</label>
             <select id="p-sol" class="select">
               <option value="">Choisir…</option>
-              <option value="sableux">Sableux</option>
+              <option value="ferrallitique">Ferrallitique (dominant CI)</option>
               <option value="argileux">Argileux</option>
+              <option value="hydromorphe">Hydromorphe (bas-fonds)</option>
               <option value="limoneux">Limoneux</option>
+              <option value="sableux">Sableux</option>
               <option value="lateritique">Latéritique</option>
             </select>
             <span class="input-error" id="err-sol"></span>
@@ -193,11 +195,11 @@
           <div class="slider-field">
             <div class="slider-label-row">
               <label>💧 Pluviométrie</label>
-              <span class="slider-val" id="val-pluv">450 mm</span>
+              <span class="slider-val" id="val-pluv">1200 mm</span>
             </div>
-            <input type="range" id="p-pluv" min="0" max="2000" value="450" step="10"
+            <input type="range" id="p-pluv" min="0" max="3000" value="1200" step="10"
                    oninput="document.getElementById('val-pluv').textContent=this.value+' mm'"/>
-            <div class="slider-hints"><span>Sécheresse (0 mm)</span><span>Optimum (~600 mm)</span><span>Excès (2000 mm)</span></div>
+            <div class="slider-hints"><span>Sec (0 mm)</span><span>Moy (~1200 mm)</span><span>Humide (3000 mm)</span></div>
           </div>
 
           <div class="slider-field">

@@ -80,7 +80,7 @@ class ParcelleCreate(BaseModel):
     @field_validator("type_sol")
     @classmethod
     def sol_valid(cls, v):
-        allowed = {"sableux", "argileux", "limoneux", "lateritique"}
+        allowed = {"sableux", "argileux", "limoneux", "lateritique", "ferrallitique", "hydromorphe", "alluvionnaire"}
         if v not in allowed:
             raise ValueError(f"Type de sol invalide. Valeurs : {allowed}")
         return v
@@ -88,7 +88,14 @@ class ParcelleCreate(BaseModel):
     @field_validator("culture")
     @classmethod
     def culture_valid(cls, v):
-        allowed = {"mais", "riz", "arachide", "sorgho", "mil", "coton", "manioc"}
+        allowed = {
+            # Cultures vivrières
+            "mais", "riz", "manioc", "igname",
+            # Cultures de rente CI
+            "cacao", "cafe", "anacarde", "coton", "palmier", "hevea",
+            # Cultures legacy (compatibilité)
+            "arachide", "sorgho", "mil",
+        }
         if v not in allowed:
             raise ValueError(f"Culture invalide. Valeurs : {allowed}")
         return v
@@ -141,6 +148,18 @@ class PredictionInput(BaseModel):
     superficie:   float   # ha
     type_sol:     str
     parcelle_id:  Optional[int] = None
+
+    @field_validator("culture")
+    @classmethod
+    def culture_valid(cls, v):
+        allowed = {
+            "mais", "riz", "manioc", "igname",
+            "cacao", "cafe", "anacarde", "coton", "palmier", "hevea",
+            "arachide", "sorgho", "mil",
+        }
+        if v not in allowed:
+            raise ValueError(f"Culture invalide. Valeurs : {allowed}")
+        return v
 
     @field_validator("pluviometrie")
     @classmethod
