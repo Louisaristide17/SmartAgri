@@ -118,7 +118,7 @@ class MainScreenState extends State<MainScreen> {
     _NavItem(icon: '🗺️', label: 'Parcelles'),
     _NavItem(icon: '🔮', label: 'Prédire'),
     _NavItem(icon: '🌦️', label: 'Météo'),
-    _NavItem(icon: '🤖', label: 'AgriBot'),
+    _NavItem(icon: '👵🏻', label: 'AgriBot'),
   ];
 
   @override

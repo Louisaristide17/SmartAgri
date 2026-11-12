@@ -221,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
       {'icon': '🗺️', 'label': 'Parcelles',  'index': 1},
       {'icon': '🔮', 'label': 'Prédire',    'index': 2},
       {'icon': '🌦️', 'label': 'Météo',      'index': 3},
-      {'icon': '🤖', 'label': 'AgriBot',    'index': 4},
+      {'icon': '👵🏻', 'label': 'AgriBot',    'index': 4},
     ];
 
     return Column(
