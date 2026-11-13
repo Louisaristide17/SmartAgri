@@ -104,3 +104,18 @@ def test_zone_gps(client):
     r = client.get("/api/prediction/zone?latitude=6.88&longitude=-6.45").json()     # Daloa
     assert r["zone"] == "foret" and r["cultures_conseillees"]
     assert not client.get("/api/prediction/zone?latitude=14.7&longitude=-17.4").json()["dans_le_pays"]   # Dakar
+
+# ───────── Politesse de l'agent ─────────
+def test_agent_salue_poliment(client, auth):
+    rep = _dire(client, auth, "Bonjour")
+    assert "Bonjour" in rep and "plaisir" in rep and "aider" in rep
+
+def test_agent_remercie_et_prend_conge(client, auth):
+    rep = _dire(client, auth, "Merci beaucoup").lower()
+    assert any(mot in rep for mot in ("plaisir", "prie", "confiance"))
+    assert "Au revoir" in _dire(client, auth, "Au revoir")
+
+def test_reponses_factuelles_courtoises(client, auth):
+    rep = _dire(client, auth, "Quel rendement pour le maïs à Bouaké ?")
+    assert "t/ha" in rep and ("disposition" in rep or "plaisir" in rep or "récolte" in rep or "précisions" in rep)
+    assert "Je vous prie de m'excuser" in _dire(client, auth, "azertyuiop qsdfghjkl")

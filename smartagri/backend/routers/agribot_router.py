@@ -12,7 +12,7 @@ from database import get_db
 from models import Conversation, User
 from schemas import MessageIn, MessageOut
 from auth import get_current_user
-from agent_tools import run_agent
+from agent_tools import run_agent, politesse
 
 router = APIRouter(prefix="/api/agribot", tags=["AgriBot"])
 
@@ -169,10 +169,10 @@ def get_bot_response(message: str) -> str:
                 return item["response"]
 
     return (
-        "🤔 Je n'ai pas de réponse précise à cette question.\n\n"
-        "Essayez de me poser des questions sur :\n"
-        "**engrais, irrigation, semis, maladies, rendement, sols, météo**\n\n"
-        "Pour des conseils spécialisés, contactez un technicien agricole de votre région."
+        "🤔 Je vous prie de m'excuser, je n'ai pas de réponse précise à cette question pour le moment.\n\n"
+        "Il me serait très agréable de vous aider sur : **engrais, irrigation, semis, maladies, rendement, sols, météo**. "
+        "Pourriez-vous reformuler votre question, ou me préciser la culture et la ville concernées ?\n\n"
+        "Pour un conseil spécialisé, je vous invite aimablement à contacter un technicien de l'ANADER de votre région."
     )
 
 
@@ -186,7 +186,7 @@ async def get_openai_response(messages: list, user_message: str) -> str:
 Tu aides les agriculteurs ivoiriens avec des conseils pratiques sur les cultures locales (cacao, café,
 anacarde, maïs, riz, manioc, igname, coton, palmier à huile, hévéa), les sols, l'irrigation,
 les engrais, les maladies et le calendrier cultural ivoirien. Cite les structures locales (ANADER,
-FIRCA, CCC, CGFCC) quand c'est utile. Réponds en français, sois précis et bienveillant.
+FIRCA, CCC, CGFCC) quand c'est utile. Réponds en français simple et clair, avec beaucoup de politesse : vouvoie toujours l'utilisateur, accueille-le chaleureusement, remercie-le de sa question, reste courtois et bienveillant même si la question est maladroite, et termine par une formule aimable proposant ton aide. Sois précis, concret et réponds directement à la question avant de développer.
 Ne donne pas de conseils sur les pesticides non homologués en Côte d'Ivoire."""
 
         history = [{"role": "system", "content": system_prompt}]
@@ -234,11 +234,13 @@ async def send_message(
     # Agent : essaie d'abord les outils (base de données, modèle ML), avec mémoire de la conversation
     agent_reply, outils = run_agent(payload.content, db, current_user, history_list[:-1])
     if agent_reply:
-        response_text = agent_reply + (f"\n\n_🔧 Outil utilisé : {', '.join(outils)}_" if outils and outils != ["garde-fou"] else "")
+        response_text = politesse(agent_reply, payload.content, current_user, outils)
+        if outils and outils not in (["garde-fou"], ["conversation"]):
+            response_text += f"\n\n_🔧 Outil utilisé : {', '.join(outils)}_"
     elif OPENAI_KEY:
         response_text = await get_openai_response(history_list, payload.content)
     else:
-        response_text = get_bot_response(payload.content)
+        response_text = politesse(get_bot_response(payload.content), payload.content, current_user, [])
 
     # Sauvegarder la réponse
     bot_msg = Conversation(

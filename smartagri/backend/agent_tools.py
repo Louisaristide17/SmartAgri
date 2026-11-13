@@ -17,9 +17,9 @@ CLIMAT_DEFAUT = {"sud": (1900, 27), "foret": (1500, 26.5), "centre": (1150, 27.5
 
 REFUS = [
     (r"paraquat|glyphosate pur|ddt|endosulfan|lindane|pesticide interdit|non homologu",
-     "⚠️ Je ne peux pas conseiller de produits non homologués en Côte d'Ivoire. Adressez-vous à l'ANADER ou à un revendeur agréé."),
+     "⚠️ Je vous prie de m'excuser, mais je ne peux pas vous conseiller de produits non homologués en Côte d'Ivoire : ils sont dangereux pour votre santé et vos cultures. Je vous invite aimablement à vous adresser à l'ANADER ou à un revendeur agréé, qui vous orienteront vers une solution autorisée."),
     (r"m[ée]dicament|maladie humaine|diagnostic|ordonnance|avocat|proc[èe]s|imp[ôo]t",
-     "Cette question sort de mon domaine (agriculture). Pour un avis médical ou juridique, consultez un professionnel."),
+     "Je vous remercie de votre confiance, mais cette question sort de mon domaine (l'agriculture). Pour un avis médical ou juridique, je vous recommande respectueusement de consulter un professionnel qualifié. Je reste volontiers à votre service pour tout ce qui concerne vos cultures."),
 ]
 
 
@@ -87,6 +87,9 @@ def cultures_de_la_zone(zone: str) -> str:
 def run_agent(message: str, db: Session, user: User, history: List[dict]) -> Tuple[Optional[str], List[str]]:
     """Retourne (réponse, outils utilisés). Réponse None -> laisser le LLM / la base de règles répondre."""
     m = message.lower()
+    cc = conversation_courante(message, user)
+    if cc:
+        return cc, ["conversation"]
     for pattern, reponse in REFUS:                       # garde-fous
         if re.search(pattern, m):
             return reponse, ["garde-fou"]
@@ -108,3 +111,60 @@ def run_agent(message: str, db: Session, user: User, history: List[dict]) -> Tup
         if z:
             return cultures_de_la_zone(z), ["cultures_de_la_zone"]
     return None, []
+
+
+
+# ───────── Politesse et conversation courante ─────────
+import hashlib
+
+def _prenom(user) -> str:
+    return (getattr(user, "firstname", "") or "").strip().title()
+
+def _choix(options: List[str], graine: str) -> str:
+    """Choix stable (pas de répétition mécanique d'une même formule)."""
+    return options[int(hashlib.md5(graine.encode()).hexdigest(), 16) % len(options)]
+
+def conversation_courante(message: str, user) -> Optional[str]:
+    """Salutations, remerciements, au revoir, 'comment ça va', présentation : réponse chaleureuse immédiate."""
+    m = normaliser(message).replace("-", " ").strip()
+    p = _prenom(user)
+    nom = f" {p}" if p else ""
+    if re.fullmatch(r"(bonjour|bonsoir|salut|coucou|hello|bjr|bsr|allo)( agribot| a tous| tout le monde)?", m):
+        return (f"Bonjour{nom} ! 🌱 Je suis ravi de vous accueillir. Je suis AgriBot, votre assistant agricole pour la Côte d'Ivoire.\n\n"
+                "Je peux, avec plaisir :\n"
+                "• vous parler de vos parcelles et de vos prédictions ;\n"
+                "• estimer le rendement d'une culture (par exemple : « Quel rendement pour le cacao à Daloa ? ») ;\n"
+                "• vous conseiller sur les engrais, les maladies, les semis ou l'irrigation.\n\n"
+                "Comment puis-je vous aider aujourd'hui ?")
+    if re.search(r"\b(merci|remercie|thanks|c est gentil|je te remercie)\b", m):
+        return _choix([f"Avec grand plaisir{nom} ! 😊 C'est un honneur de vous accompagner. N'hésitez surtout pas si vous avez d'autres questions.",
+                       f"Je vous en prie{nom}, tout le plaisir est pour moi ! 🌿 Je reste à votre entière disposition.",
+                       f"Merci à vous{nom} pour votre confiance ! Je suis là chaque fois que vous avez besoin d'un conseil."], m)
+    if re.search(r"\b(au revoir|a bientot|a plus|bonne journee|bonne soiree|bye|a demain)\b", m):
+        return f"Au revoir{nom} et bonne continuation ! 🌾 Je vous souhaite de belles récoltes. À très bientôt !"
+    if re.search(r"(comment (vas|allez|va) (tu|vous)|ca va|comment ca va|tu vas bien)", m):
+        return f"Je vous remercie de prendre de mes nouvelles, je vais très bien{nom} ! 😊 Et vous, j'espère que vos cultures se portent bien ? Dites-moi comment je peux vous aider."
+    if re.search(r"(qui es tu|qui etes vous|tu es qui|presente toi|que sais tu faire|que peux tu faire|tu peux faire quoi|aide|help)", m):
+        return ("Je suis AgriBot 🤖🌱, l'assistant agricole de SmartAgri, dédié à la Côte d'Ivoire. Avec plaisir, voici ce que je sais faire :\n"
+                "• consulter vos parcelles et vos dernières prédictions ;\n"
+                "• estimer le rendement d'une culture grâce au modèle d'intelligence artificielle ;\n"
+                "• indiquer les cultures adaptées à votre zone ;\n"
+                "• répondre à vos questions sur les engrais, maladies, semis et irrigation.\n\n"
+                "Que souhaitez-vous savoir ?")
+    return None
+
+
+def politesse(texte: str, message: str, user, outils: List[str]) -> str:
+    """Ajoute une formule d'accueil et de clôture courtoises autour d'une réponse factuelle."""
+    if not texte or outils == ["conversation"]:
+        return texte
+    nom = f" {_prenom(user)}" if _prenom(user) else ""
+    debut = _choix([f"Avec plaisir{nom} ! ", f"Certainement{nom}, voici ce que je peux vous dire. ",
+                    f"Très volontiers{nom} ! ", f"Je vous remercie de votre question{nom}. "], message + "d")
+    fin = _choix(["Je reste à votre disposition pour toute autre question. 🌿",
+                  "N'hésitez pas à me demander des précisions, ce sera un plaisir de vous aider. 🌱",
+                  "Si vous le souhaitez, je peux vous détailler n'importe quel point. 🌾",
+                  "Je vous souhaite une excellente récolte ! 🌽 Je suis là si vous avez besoin de moi."], message + "f")
+    if outils == ["garde-fou"]:
+        return texte
+    return f"{debut}\n\n{texte}\n\n{fin}"
