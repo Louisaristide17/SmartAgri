@@ -3,7 +3,7 @@ Agent IA réel (LLM) — AgriBot via l'API Groq (compatible OpenAI), avec appel 
 
 Le modèle de langage CHOISIT lui-même l'outil à appeler (function calling), reçoit le résultat,
 puis rédige la réponse en français courtois. La clé est lue dans la variable d'environnement
-GROQ_API_KEY (jamais dans le code). Sans clé ou en cas d'erreur -> l'appelant se replie sur
+DEEPSEEK_API_KEY / GROQ_API_KEY / ANTHROPIC_API_KEY (jamais dans le code). Sans clé ou en cas d'erreur -> l'appelant se replie sur
 l'agent à règles (agent_tools.run_agent), donc l'application ne tombe jamais en panne.
 """
 import os, json
@@ -100,6 +100,8 @@ def _boucle_claude(url, modele, cle, message, db, user, history):
     msgs = []
     for h in history[-10:]:
         msgs.append({"role": h["role"], "content": h["content"][:1200]})
+    while msgs and msgs[0]["role"] != "user":                 # l'API Claude exige de commencer par un message « user »
+        msgs.pop(0)
     msgs.append({"role": "user", "content": message})
     utilises: List[str] = []
     with httpx.Client(timeout=25) as client:
