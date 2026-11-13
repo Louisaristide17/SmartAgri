@@ -39,7 +39,43 @@ def _ville_dans(texte: str) -> Optional[str]:
     for v in sorted(VILLES_ZONE, key=len, reverse=True):
         if f"-{v}-" in "-" + t.replace(" ", "-") + "-" or re.search(rf"\b{re.escape(v)}\b", t.replace("-", " ")):
             return v
-    return None
+    # tolérance aux fautes de frappe (ex. « Korogho » -> korhogo)
+    from difflib import SequenceMatcher
+    mots = [w for w in re.findall(r"[a-z]{4,}", t) if w not in _MOTS_COURANTS]
+    meilleur, score = None, 0.0
+    for w in mots:
+        for v in VILLES_ZONE:
+            r = SequenceMatcher(None, w, v).ratio()
+            if r > score:
+                meilleur, score = v, r
+    return meilleur if score >= 0.82 else None
+
+
+_MOTS_COURANTS = {"sols", "sol", "terre", "terres", "cacao", "mais", "riz", "cafe", "fiable", "adapte", "adaptee", "pour", "dans",
+                  "quel", "quelle", "culture", "cultures", "rendement", "mes", "parcelles", "bonjour", "merci", "engrais", "pluie"}
+
+
+def adequation_culture_ville(culture: str, ville: str) -> str:
+    """Le sol/le climat de la ville conviennent-ils à la culture ? Verdict + estimation du modèle ML."""
+    from savoir import SOLS_ZONE
+    zone = zone_depuis_ville(ville)
+    c = CULTURES[culture]
+    apt = c["zones"].get(zone, 1.0)
+    verdict = ("très bien adaptée" if apt >= 0.9 else "bien adaptée" if apt >= 0.7 else
+               "moyennement adaptée" if apt >= 0.5 else "peu adaptée")
+    pluie, temp = CLIMAT_DEFAUT.get(zone, (1300, 27))
+    sols = SOLS_ZONE[zone][0]
+    rep = (f"📍 **{c['label']} à {ville.title()}** ({ZONES[zone].split(' (')[0]}) : la zone est **{verdict}** à cette culture.\n\n"
+           f"• **Sols de la zone :** {sols}\n"
+           f"• **Climat typique :** environ {pluie} mm de pluie par an, {temp} °C ; le {c['label'].lower()} préfère environ {c['pluv']} mm et {c['temp']} °C.\n")
+    try:
+        rep += "• **Estimation du modèle :** " + predire_rendement(culture, ville).split("\n")[1].replace("**", "").strip() + "\n"
+    except Exception:
+        pass
+    if apt < 0.7:
+        meilleures = sorted(((a, v["label"]) for k, v in CULTURES.items() for z, a in [(zone, v["zones"].get(zone, 0))]), reverse=True)[:3]
+        rep += "\n💡 Dans cette zone, mieux vaut privilégier : " + ", ".join(l for _, l in meilleures) + "."
+    return rep + "\n\n⚠️ Indication générale : un test de sol à l'ANADER confirmera la réponse pour votre parcelle."
 
 
 # ───────── Outils ─────────
@@ -108,6 +144,12 @@ def run_agent(message: str, db: Session, user: User, history: List[dict]) -> Tup
     for h in reversed(history[-10:]):
         if h["role"] == "user" and h["content"] != message:
             culture = culture or _culture_dans(h["content"]); ville = ville or _ville_dans(h["content"])
+
+    # « le sol de <ville> convient-il à <culture> ? » : verdict d'adéquation (culture ET ville dans le message)
+    c_msg, v_msg = _culture_dans(message), _ville_dans(message)
+    if c_msg and v_msg and zone_depuis_ville(v_msg) and re.search(
+            r"\bsols?\b|\bterres?\b|terrain|fiable|adapt|convient|favorable|pratiqu|bon pour|bien pour|possible", m):
+        return adequation_culture_ville(c_msg, v_msg), ["adequation_culture_ville (modèle ML)"]
 
     # sols d'une VILLE citée dans le message (et non héritée de la conversation) -> réponse locale
     ville_msg = _ville_dans(message)
