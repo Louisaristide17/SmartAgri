@@ -2,7 +2,7 @@
 Route météo — Sources de données réelles (sans clé API requise) :
   1. Open-Meteo API (gratuite, sans clé) — météo actuelle + prévisions 7 jours
   2. OpenWeatherMap (si clé configurée dans .env) — fallback de qualité
-  3. Données agronomiques enrichies selon la saison sénégalaise
+  3. Données agronomiques enrichies selon la saison ivoirienne
 
 Open-Meteo : https://open-meteo.com/ (licence libre)
 """
@@ -81,7 +81,7 @@ async def geocode_ville(ville: str) -> dict | None:
             headers={"User-Agent": "SmartAgri/1.0 (agro-app)"}) as client:
             resp = await client.get(
                 "https://nominatim.openstreetmap.org/search",
-                params={"q": ville + ", Côte d'Ivoire", "format": "json", "limit": 1}
+                params={"q": ville, "countrycodes": "ci", "format": "json", "limit": 1}
             )
         if resp.status_code == 200:
             results = resp.json()

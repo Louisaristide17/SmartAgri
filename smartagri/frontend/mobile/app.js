@@ -66,7 +66,7 @@ function showPage(pageId) {
   }
 
   // Charger données selon page
-  if (pageId === 'meteo')   loadMMeteo('Dakar', null);
+  if (pageId === 'meteo')   loadMMeteo('Abidjan', null);
   if (pageId === 'parcelles') renderMParcelles();
   if (pageId === 'profil')  loadProfil();
 }
@@ -129,7 +129,7 @@ async function loadAccueil() {
 
     // Aperçu parcelles
     const prev = document.getElementById('parcelles-preview');
-    const icons = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+    const icons = {cacao:'🍫',cafe:'☕',hevea:'🌳',palmier:'🌴',anacarde:'🥜',coton:'☁️',mais:'🌽',riz:'🌾',manioc:'🥔',igname:'🍠',arachide:'🥜',sorgho:'🌿',mil:'🌿'};
     if (parcelles.length === 0) {
       prev.innerHTML = `<div style="text-align:center;padding:16px;color:var(--gray400);font-size:.85rem;">
         Aucune parcelle — <button onclick="showPage('parcelles')" style="background:none;border:none;color:var(--g500);font-weight:600;cursor:pointer;">Ajouter</button></div>`;
@@ -169,7 +169,7 @@ async function loadAccueil() {
 
 async function loadMeteoBanner() {
   try {
-    const m = await ApiMeteo.current('Dakar');
+    const m = await ApiMeteo.current('Abidjan');
     document.getElementById('mb-icon').textContent = meteoIcon(m.icone);
     document.getElementById('mb-temp').textContent = m.temperature + '°C';
     document.getElementById('mb-desc').textContent = m.description;
@@ -191,7 +191,7 @@ async function loadParcellesData() {
     const sel = document.getElementById('m-sel-parcelle');
     sel.innerHTML = '<option value="">Sélectionner une parcelle…</option>';
     allMParcelles.forEach(p => {
-      sel.innerHTML += `<option value="${p.id}" data-culture="${p.culture}" data-sol="${p.type_sol}" data-sup="${p.superficie}">${p.nom}</option>`;
+      sel.innerHTML += `<option value="${p.id}" data-culture="${p.culture}" data-sol="${p.type_sol}" data-sup="${p.superficie}" data-ville="${p.ville||''}">${p.nom}</option>`;
     });
   } catch(e) {}
 }
@@ -209,7 +209,7 @@ function renderMParcelles(list = null) {
       p.nom.toLowerCase().includes(q) || p.culture.includes(q) || (p.ville||'').toLowerCase().includes(q));
   }
 
-  const icons = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+  const icons = {cacao:'🍫',cafe:'☕',hevea:'🌳',palmier:'🌴',anacarde:'🥜',coton:'☁️',mais:'🌽',riz:'🌾',manioc:'🥔',igname:'🍠',arachide:'🥜',sorgho:'🌿',mil:'🌿'};
   const sbadge = {active:'mb-green',en_repos:'mb-orange',recoltee:'mb-blue'};
   const sfr    = {active:'Active',en_repos:'En repos',recoltee:'Récoltée'};
   const solfr  = {sableux:'Sableux',argileux:'Argileux',limoneux:'Limoneux',lateritique:'Latéritique'};
@@ -267,6 +267,7 @@ function openAddParcelle() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('d-statut').value = 'active';
+  _gps = null; const gi = document.getElementById('d-gps-info'); if (gi) gi.textContent = '';
   openDrawer();
 }
 
@@ -295,6 +296,23 @@ async function mDeleteParcelle(id, nom) {
   } catch(e) { mToast('Erreur : ' + e.message, 'error'); }
 }
 
+let _gps = null;   // {latitude, longitude} du téléphone
+function mUseGps() {
+  const info = document.getElementById('d-gps-info');
+  if (!navigator.geolocation) { info.textContent = 'GPS non disponible sur cet appareil.'; return; }
+  info.textContent = 'Recherche de votre position…';
+  navigator.geolocation.getCurrentPosition(async pos => {
+    _gps = { latitude: +pos.coords.latitude.toFixed(5), longitude: +pos.coords.longitude.toFixed(5) };
+    try {
+      const z = await ApiPrediction.zoneGps(_gps.latitude, _gps.longitude);
+      if (!z.dans_le_pays) { info.textContent = '⚠️ ' + z.message; _gps = null; return; }
+      info.textContent = `📍 ${z.zone_label} · conseillé : ${z.cultures_conseillees.join(', ')}`;
+    } catch (e) { info.textContent = '📍 Position enregistrée.'; }
+  }, err => {
+    info.textContent = err.code === 1 ? 'Autorisation GPS refusée : saisissez la ville à la main.' : 'Position introuvable, réessayez dehors.';
+  }, { enableHighAccuracy: true, timeout: 12000 });
+}
+
 async function saveMParcelle() {
   document.querySelectorAll('.m-err').forEach(e => e.textContent='');
   const nom     = document.getElementById('d-nom').value.trim();
@@ -313,7 +331,7 @@ async function saveMParcelle() {
   if (!sol)               { document.getElementById('derr-sol').textContent     = 'Requis.'; ok=false; }
   if (!ok) return;
 
-  const payload = { nom, superficie: sup, culture, type_sol: sol, statut, ville: ville||null, description: desc||null };
+  const payload = { nom, superficie: sup, culture, type_sol: sol, statut, ville: ville||null, description: desc||null, ..._gps };
   const btn = document.getElementById('d-save-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="m-spinner"></span>';
@@ -388,15 +406,20 @@ async function mPredict() {
   btn.innerHTML = '<span class="m-spinner"></span> Calcul en cours…';
 
   try {
+    const selP = document.getElementById('m-sel-parcelle');
+    const optP = selP.options[selP.selectedIndex];
     const res = await ApiPrediction.predict({
       culture, type_sol, superficie, pluviometrie: pluv, temperature: temp, engrais_kg: engrais,
+      parcelle_id: selP.value ? parseInt(selP.value) : null,
+      ville: (optP && optP.dataset.ville) || null,
     });
+    if (res.avertissement) showToast(res.avertissement, 'warning', 7000);
 
     const card = document.getElementById('pred-result-card');
     card.style.display = 'block';
     card.scrollIntoView({ behavior: 'smooth' });
 
-    const icons = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+    const icons = {cacao:'🍫',cafe:'☕',hevea:'🌳',palmier:'🌴',anacarde:'🥜',coton:'☁️',mais:'🌽',riz:'🌾',manioc:'🥔',igname:'🍠',arachide:'🥜',sorgho:'🌿',mil:'🌿'};
     document.getElementById('prc-value').textContent   = res.rendement_predit.toFixed(2);
     document.getElementById('prc-culture').textContent = `${icons[culture]||'🌱'} ${culture} · ${superficie} ha`;
 
@@ -425,7 +448,7 @@ async function mPredict() {
 async function loadPredHistory() {
   try {
     const list = await ApiPrediction.historique();
-    const icons = {mais:'🌽',riz:'🌾',arachide:'🥜',sorgho:'🌿',mil:'🌿',coton:'☁️',manioc:'🥔'};
+    const icons = {cacao:'🍫',cafe:'☕',hevea:'🌳',palmier:'🌴',anacarde:'🥜',coton:'☁️',mais:'🌽',riz:'🌾',manioc:'🥔',igname:'🍠',arachide:'🥜',sorgho:'🌿',mil:'🌿'};
     const container = document.getElementById('m-pred-history');
     if (list.length === 0) {
       container.innerHTML = '<p style="color:var(--gray400);font-size:.82rem;text-align:center;padding:10px 0;">Aucune prédiction encore</p>';

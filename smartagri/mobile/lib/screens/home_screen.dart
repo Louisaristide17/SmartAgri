@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final results = await Future.wait([
         _api.getParcelles(),
         _api.getHistoriquePredictions(),
-        _api.getMeteo('Dakar'),
+        _api.getMeteo('Abidjan'),
       ]);
 
       setState(() {
@@ -199,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
             : StatCard(
                 icon: '🌡️',
                 value: _meteo != null ? '${_meteo!.temperature}°C' : '–',
-                label: 'Température Dakar',
+                label: 'Température Abidjan',
                 trend: _meteo?.description ?? '',
                 bgColor: AppColors.blueBg,
               ),

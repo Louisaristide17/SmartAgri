@@ -167,6 +167,9 @@ class ApiService {
   Future<Map<String, dynamic>> predict(Map<String, dynamic> input) async =>
       await _request('POST', '/api/prediction/', body: input);
 
+  Future<Map<String, dynamic>> getZoneGps(double lat, double lon) async =>
+      await _request('GET', '/api/prediction/zone?latitude=$lat&longitude=$lon', auth: false);
+
   Future<List<dynamic>> getHistoriquePredictions() async =>
       await _request('GET', '/api/prediction/historique') as List;
 

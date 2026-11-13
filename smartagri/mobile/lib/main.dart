@@ -108,7 +108,7 @@ class MainScreen extends StatefulWidget {
 class MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  @override
+  // Permet aux autres écrans de changer d'onglet
   void setTab(int index) {
     setState(() => _currentIndex = index);
   }

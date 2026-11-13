@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/ci_data.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/common_widgets.dart';
@@ -18,11 +19,16 @@ class _PredictionScreenState extends State<PredictionScreen>
 
   // ── Valeurs des sliders ──
   String  _culture   = 'cacao';
-  String  _sol       = 'argileux';
+  String  _sol       = 'ferrallitique';
   double  _superficie = 1.0;
-  double  _pluv      = 1200;
-  double  _temp      = 26;
-  double  _engrais   = 50;
+  double  _pluv      = CiData.pluvDefaut;
+  double  _temp      = CiData.tempDefaut;
+  double  _engrais   = CiData.engraisDefaut;
+
+  // ── Localisation (Côte d'Ivoire) ──
+  String  _ville     = 'Abidjan';
+  int?    _parcelleId;
+  List<ParcelleModel> _parcelles = [];
 
   PredictionModel? _result;
   bool _loading     = false;
@@ -35,6 +41,7 @@ class _PredictionScreenState extends State<PredictionScreen>
     _tabs = TabController(length: 2, vsync: this);
     _loadHistorique();
     _loadMeteoTemp();
+    _loadParcelles();
   }
 
   @override
@@ -42,10 +49,38 @@ class _PredictionScreenState extends State<PredictionScreen>
 
   Future<void> _loadMeteoTemp() async {
     try {
-      final m = await _api.getMeteo('Abidjan');
+      final m = await _api.getMeteo(_ville);
       final meteo = MeteoModel.fromJson(m);
-      setState(() => _temp = meteo.temperature.clamp(10, 45).toDouble());
+      if (!mounted) return;
+      setState(() => _temp = meteo.temperature
+          .clamp(CiData.tempMin, CiData.tempMax).toDouble());
     } catch (_) {}
+  }
+
+  Future<void> _loadParcelles() async {
+    try {
+      final list = await _api.getParcelles();
+      if (!mounted) return;
+      setState(() {
+        _parcelles = list.map((e) => ParcelleModel.fromJson(e)).toList();
+      });
+    } catch (_) {}
+  }
+
+  /// Pré-remplit le formulaire à partir d'une parcelle (ou remet en saisie libre)
+  void _selectParcelle(ParcelleModel? p) {
+    setState(() {
+      _parcelleId = p?.id;
+      if (p != null) {
+        if (CiData.cultures.containsKey(p.culture)) _culture = p.culture;
+        if (CiData.sols.containsKey(p.typeSol)) _sol = p.typeSol;
+        _superficie = p.superficie.clamp(0.1, 20.0).toDouble();
+        if (p.ville != null && p.ville!.trim().isNotEmpty) {
+          _ville = p.ville!.trim();
+        }
+      }
+    });
+    if (p != null) _loadMeteoTemp();
   }
 
   Future<void> _loadHistorique() async {
@@ -71,6 +106,8 @@ class _PredictionScreenState extends State<PredictionScreen>
         'pluviometrie': _pluv,
         'temperature':  _temp,
         'engrais_kg':   _engrais,
+        'ville':        _ville,
+        'parcelle_id':  _parcelleId,
       });
       setState(() {
         _result = PredictionModel.fromJson(data);
@@ -79,7 +116,11 @@ class _PredictionScreenState extends State<PredictionScreen>
       // Passer à l'onglet résultat
       _tabs.animateTo(0);
       _loadHistorique();
-      showSnack(context, 'Prédiction calculée avec succès !');
+      if (_result?.avertissement != null) {
+        showSnack(context, _result!.avertissement!, error: true);
+      } else {
+        showSnack(context, 'Prédiction calculée avec succès !');
+      }
     } on ApiException catch (e) {
       setState(() => _loading = false);
       showSnack(context, e.message, error: true);
@@ -189,15 +230,7 @@ class _PredictionScreenState extends State<PredictionScreen>
   Widget _buildResult() {
     final r = _result!;
     final conf = r.confiance ?? 80;
-    final icon = r.culture == 'mais' ? '🌽'
-        : r.culture == 'riz'     ? '🌾'
-        : r.culture == 'cacao'   ? '🍫'
-        : r.culture == 'cafe'    ? '☕'
-        : r.culture == 'manioc'  ? '🥔'
-        : r.culture == 'igname'  ? '🍠'
-        : r.culture == 'anacarde'? '🥜'
-        : r.culture == 'coton'   ? '☁️'
-        : '🌱';
+    final icon = CiData.emoji(r.culture);
 
     // Conseils dynamiques
     final tips = <String>[];
@@ -221,10 +254,16 @@ class _PredictionScreenState extends State<PredictionScreen>
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Text(icon, style: const TextStyle(fontSize: 32)),
             const SizedBox(width: 10),
-            Text(r.culture[0].toUpperCase() + r.culture.substring(1),
+            Text(CiData.nomCulture(r.culture),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600,
                   color: AppColors.white)),
           ]),
+          if (r.zone != null) ...[
+            const SizedBox(height: 6),
+            Text('📍 ${r.zone}',
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
+              textAlign: TextAlign.center),
+          ],
           const SizedBox(height: 16),
           const Text('Rendement prédit',
             style: TextStyle(fontSize: 13, color: Colors.white70)),
@@ -267,6 +306,27 @@ class _PredictionScreenState extends State<PredictionScreen>
           ]),
         ]),
       ),
+
+      // Avertissement : culture peu adaptée à la zone
+      if (r.avertissement != null) ...[
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.orangeBg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.orange.withOpacity(0.5)),
+          ),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('⚠️', style: TextStyle(fontSize: 20)),
+            const SizedBox(width: 10),
+            Expanded(child: Text(r.avertissement!,
+              style: const TextStyle(fontSize: 13, color: AppColors.gray800,
+                  height: 1.4))),
+          ]),
+        ),
+      ],
 
       // Conseils
       if (tips.isNotEmpty) ...[
@@ -311,21 +371,35 @@ class _PredictionScreenState extends State<PredictionScreen>
         color: Colors.white70)),
   ]);
 
+  // Liste déroulante au style SmartAgri
+  Widget _select({
+    required String? value,
+    required List<DropdownMenuItem<String>> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.gray50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.gray300),
+      ),
+      child: DropdownButton<String>(
+        value: value,
+        isExpanded: true,
+        underline: const SizedBox.shrink(),
+        items: items,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
   // ══ Onglet PARAMÈTRES ════════════════════════════
   Widget _buildFormTab() {
-    final cultures = {
-      'cacao':   '🍫 Cacao',   'cafe':    '☕ Café',
-      'mais':    '🌽 Maïs',    'riz':     '🌾 Riz',
-      'manioc':  '🥔 Manioc',  'igname':  '🍠 Igname',
-      'coton':   '☁️ Coton',   'anacarde':'🥜 Anacarde',
-    };
-    final sols = {
-      'ferrallitique': 'Ferrallitique',
-      'argileux':  'Argileux',
-      'limoneux':  'Limoneux',
-      'sableux':   'Sableux',
-      'lateritique': 'Latéritique',
-    };
+    final cultures = CiData.cultures;
+    final sols = CiData.sols;
+    final villes = <String>[...CiData.villes];
+    if (!villes.contains(_ville)) villes.insert(0, _ville);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
@@ -333,8 +407,59 @@ class _PredictionScreenState extends State<PredictionScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Info météo contextuelle
-          _MeteoContext(temp: _temp),
+          _MeteoContext(temp: _temp, ville: _ville),
           const SizedBox(height: 20),
+
+          SmartCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('📍 Localisation',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
+                      color: AppColors.gray900)),
+                const SizedBox(height: 14),
+                const Text('Ma parcelle (optionnel)',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                      color: AppColors.gray700)),
+                const SizedBox(height: 8),
+                _select(
+                  value: _parcelleId == null ? '0' : '$_parcelleId',
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: '0', child: Text('Saisie manuelle')),
+                    ..._parcelles.map((pc) => DropdownMenuItem<String>(
+                      value: '${pc.id}',
+                      child: Text('${pc.cultureIcon} ${pc.nom}',
+                        overflow: TextOverflow.ellipsis))),
+                  ],
+                  onChanged: (v) {
+                    if (v == null || v == '0') {
+                      _selectParcelle(null);
+                    } else {
+                      _selectParcelle(
+                          _parcelles.firstWhere((pc) => '${pc.id}' == v));
+                    }
+                  },
+                ),
+                const SizedBox(height: 14),
+                const Text('Ville (zone agro-écologique)',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                      color: AppColors.gray700)),
+                const SizedBox(height: 8),
+                _select(
+                  value: _ville,
+                  items: villes.map((v) => DropdownMenuItem<String>(
+                    value: v, child: Text(v))).toList(),
+                  onChanged: (v) {
+                    if (v == null) return;
+                    setState(() => _ville = v);
+                    _loadMeteoTemp();
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
 
           SmartCard(
             child: Column(
@@ -380,15 +505,16 @@ class _PredictionScreenState extends State<PredictionScreen>
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
                       color: AppColors.gray700)),
                 const SizedBox(height: 8),
-                Row(children: sols.entries.map((e) {
-                  final sel = _sol == e.key;
-                  return Expanded(child: Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: GestureDetector(
+                Wrap(
+                  spacing: 6, runSpacing: 6,
+                  children: sols.entries.map((e) {
+                    final sel = _sol == e.key;
+                    return GestureDetector(
                       onTap: () => setState(() => _sol = e.key),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
                           color: sel ? AppColors.green100 : AppColors.gray100,
                           borderRadius: BorderRadius.circular(10),
@@ -397,14 +523,14 @@ class _PredictionScreenState extends State<PredictionScreen>
                             width: sel ? 2 : 1,
                           ),
                         ),
-                        child: Center(child: Text(e.value,
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+                        child: Text(e.value,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
                               color: sel ? AppColors.green700 : AppColors.gray500),
-                          textAlign: TextAlign.center)),
+                          textAlign: TextAlign.center),
                       ),
-                    ),
-                  ));
-                }).toList()),
+                    );
+                  }).toList(),
+                ),
 
                 const SizedBox(height: 16),
                 // Superficie
@@ -433,20 +559,20 @@ class _PredictionScreenState extends State<PredictionScreen>
                 _SliderField(
                   label: '💧 Pluviométrie',
                   value: _pluv,
-                  min: 0, max: 3000, divisions: 300,
+                  min: CiData.pluvMin, max: CiData.pluvMax, divisions: 220,
                   unit: 'mm',
-                  minLabel: 'Sec',
-                  maxLabel: 'Très humide (3000mm)',
+                  minLabel: 'Sec (300 mm)',
+                  maxLabel: 'Très humide (2500 mm)',
                   onChanged: (v) => setState(() => _pluv = v),
                 ),
                 const SizedBox(height: 16),
                 _SliderField(
                   label: '🌡️ Température',
                   value: _temp,
-                  min: 10, max: 45, divisions: 70,
+                  min: CiData.tempMin, max: CiData.tempMax, divisions: 40,
                   unit: '°C',
-                  minLabel: 'Frais',
-                  maxLabel: 'Très chaud',
+                  minLabel: 'Frais (18 °C)',
+                  maxLabel: 'Chaud (38 °C)',
                   onChanged: (v) => setState(() => _temp = v),
                 ),
               ],
@@ -465,7 +591,7 @@ class _PredictionScreenState extends State<PredictionScreen>
                 _SliderField(
                   label: '🌿 Engrais',
                   value: _engrais,
-                  min: 0, max: 200, divisions: 40,
+                  min: CiData.engraisMin, max: CiData.engraisMax, divisions: 60,
                   unit: 'kg/ha',
                   minLabel: 'Sans engrais',
                   maxLabel: 'Intensif',
@@ -491,7 +617,8 @@ class _PredictionScreenState extends State<PredictionScreen>
 // ── Contexte météo ────────────────────────────────────────────────
 class _MeteoContext extends StatelessWidget {
   final double temp;
-  const _MeteoContext({required this.temp});
+  final String ville;
+  const _MeteoContext({required this.temp, required this.ville});
 
   @override
   Widget build(BuildContext context) {
@@ -511,7 +638,7 @@ class _MeteoContext extends StatelessWidget {
             const Text('Météo actuelle prise en compte',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
                   color: Color(0xFF1E40AF))),
-            Text('Température réelle Abidjan : ${temp.toStringAsFixed(0)}°C pré-remplie',
+            Text('Température réelle $ville : ${temp.toStringAsFixed(0)}°C pré-remplie',
               style: const TextStyle(fontSize: 12, color: Color(0xFF3B82F6))),
           ],
         )),
@@ -589,15 +716,7 @@ class _HistoriqueRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = prediction;
-    final icon = p.culture == 'mais' ? '🌽'
-        : p.culture == 'riz'     ? '🌾'
-        : p.culture == 'cacao'   ? '🍫'
-        : p.culture == 'cafe'    ? '☕'
-        : p.culture == 'manioc'  ? '🥔'
-        : p.culture == 'igname'  ? '🍠'
-        : p.culture == 'anacarde'? '🥜'
-        : p.culture == 'coton'   ? '☁️'
-        : '🌱';
+    final icon = CiData.emoji(p.culture);
     return SmartCard(
       padding: const EdgeInsets.all(12),
       child: Row(children: [
@@ -606,7 +725,7 @@ class _HistoriqueRow extends StatelessWidget {
         Expanded(child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(p.culture[0].toUpperCase() + p.culture.substring(1),
+            Text(CiData.nomCulture(p.culture),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
                   color: AppColors.gray900)),
             Text('${p.superficie} ha · ${p.typeSol} · ${p.pluviometrie.toInt()}mm · ${p.temperature}°C',

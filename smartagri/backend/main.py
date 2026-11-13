@@ -90,6 +90,12 @@ def seed_demo():
             db.add(demo)
             db.commit()
             print("✅ Compte démo créé : demo@smartagri.com / Demo1234!")
+
+        # Données d'exemple (parcelles, prédictions, conversation) si le compte démo est vide
+        from seed import seed_demo_data
+        demo_user = db.query(User).filter(User.email == "demo@smartagri.com").first()
+        if seed_demo_data(db, demo_user):
+            print("✅ Données de démonstration créées")
     finally:
         db.close()
 

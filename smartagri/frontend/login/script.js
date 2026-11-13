@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    SmartAgri – Login Page Script
    Connecté au backend FastAPI via api.js
    ============================================================ */
@@ -223,4 +223,3 @@ window.addEventListener('DOMContentLoaded', () => {
     if (emailInput) emailInput.value = user.email;
   }
 });
-

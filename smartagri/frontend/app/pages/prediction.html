@@ -179,6 +179,7 @@
               <option value="limoneux">Limoneux</option>
               <option value="sableux">Sableux</option>
               <option value="lateritique">Latéritique</option>
+              <option value="alluvionnaire">Alluvionnaire</option>
             </select>
             <span class="input-error" id="err-sol"></span>
           </div>
@@ -197,19 +198,19 @@
               <label>💧 Pluviométrie</label>
               <span class="slider-val" id="val-pluv">1200 mm</span>
             </div>
-            <input type="range" id="p-pluv" min="0" max="3000" value="1200" step="10"
+            <input type="range" id="p-pluv" min="300" max="2500" value="1200" step="10"
                    oninput="document.getElementById('val-pluv').textContent=this.value+' mm'"/>
-            <div class="slider-hints"><span>Sec (0 mm)</span><span>Moy (~1200 mm)</span><span>Humide (3000 mm)</span></div>
+            <div class="slider-hints"><span>Sec (300 mm)</span><span>Moy (~1200 mm)</span><span>Humide (2500 mm)</span></div>
           </div>
 
           <div class="slider-field">
             <div class="slider-label-row">
               <label>🌡️ Température moyenne</label>
-              <span class="slider-val" id="val-temp">26 °C</span>
+              <span class="slider-val" id="val-temp">27 °C</span>
             </div>
-            <input type="range" id="p-temp" min="10" max="45" value="26" step="0.5"
+            <input type="range" id="p-temp" min="18" max="38" value="27" step="0.5"
                    oninput="document.getElementById('val-temp').textContent=this.value+' °C'"/>
-            <div class="slider-hints"><span>Froid (10°C)</span><span>Optimum (~26°C)</span><span>Chaud (45°C)</span></div>
+            <div class="slider-hints"><span>Frais (18°C)</span><span>Optimum (~27°C)</span><span>Chaud (38°C)</span></div>
           </div>
 
           <div class="slider-field">
@@ -427,12 +428,12 @@ function prefillFromUrl() {
     const ville = decodeURIComponent(params.get('ville') || 'Abidjan');
 
     if (!isNaN(pluv)) {
-      const sv = Math.min(2000, Math.max(0, Math.round(pluv)));
+      const sv = Math.min(2500, Math.max(300, Math.round(pluv)));
       document.getElementById('p-pluv').value = sv;
       document.getElementById('val-pluv').textContent = sv + ' mm';
     }
     if (!isNaN(temp)) {
-      const st = Math.min(45, Math.max(10, temp));
+      const st = Math.min(38, Math.max(18, temp));
       document.getElementById('p-temp').value = st;
       document.getElementById('val-temp').textContent = st + ' °C';
     }
@@ -469,13 +470,13 @@ async function loadContextMeteo(ville = 'Abidjan') {
 
     // ─ Pré-remplir slider température ─
     const sliderTemp = document.getElementById('p-temp');
-    const clampTemp  = Math.min(45, Math.max(10, current.temperature));
+    const clampTemp  = Math.min(38, Math.max(18, current.temperature));
     sliderTemp.value = clampTemp;
     document.getElementById('val-temp').textContent = clampTemp + ' °C';
 
     // ─ Pré-remplir slider pluviométrie ─
     const sliderPluv = document.getElementById('p-pluv');
-    const clampPluv  = Math.min(2000, Math.max(0, Math.round(pluieMois)));
+    const clampPluv  = Math.min(2500, Math.max(300, Math.round(pluieMois)));
     sliderPluv.value = clampPluv;
     document.getElementById('val-pluv').textContent = clampPluv + ' mm';
 
@@ -521,10 +522,15 @@ async function doPrediction() {
   setButtonLoading(btn, true);
 
   try {
+    const selP = document.getElementById('parcelle-select');
+    const optP = selP.options[selP.selectedIndex];
     const result = await ApiPrediction.predict({
       culture, type_sol, superficie, pluviometrie: pluv,
       temperature: temp, engrais_kg: engrais,
+      parcelle_id: selP.value ? parseInt(selP.value) : null,
+      ville: (optP && optP.dataset.ville) || null,
     });
+    if (result.avertissement) showToast(result.avertissement, 'warning', 7000);
 
     // Afficher le résultat
     document.getElementById('result-empty').style.display   = 'none';
@@ -601,7 +607,7 @@ prefillFromUrl();
 loadParcellesSelect();
 loadHistorique();
 
-// Charger météo réelle (ville depuis URL, ou Dakar par défaut)
+// Charger météo réelle (ville depuis URL, ou Abidjan par défaut)
 const _urlParams = new URLSearchParams(window.location.search);
 if (_urlParams.get('source') !== 'meteo') {
   // Pas de données météo depuis la page météo → charger automatiquement

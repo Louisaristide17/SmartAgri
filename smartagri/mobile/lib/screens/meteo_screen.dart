@@ -14,14 +14,15 @@ class MeteoScreen extends StatefulWidget {
 class _MeteoScreenState extends State<MeteoScreen> {
   final _api = ApiService();
   final _searchCtrl = TextEditingController();
-  String _ville = 'Dakar';
+  String _ville = 'Abidjan';
   MeteoModel? _meteo;
   List<PrevisionJour> _previsions = [];
   bool _loading = true;
 
   final List<String> _villes = [
     'Abidjan', 'Yamoussoukro', 'Bouaké', 'Daloa', 'San-Pédro',
-    'Korhogo', 'Man', 'Gagnoa',
+    'Korhogo', 'Man', 'Gagnoa', 'Abengourou', 'Bondoukou', 'Divo',
+    'Soubré', 'Odienné', 'Tabou',
   ];
 
   @override

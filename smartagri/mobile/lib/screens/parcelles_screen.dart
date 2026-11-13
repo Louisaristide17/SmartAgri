@@ -1,3 +1,5 @@
+import '../constants/ci_data.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/api_service.dart';
@@ -101,11 +103,14 @@ class _ParcellesScreenState extends State<ParcellesScreen> {
               children: [
                 _FilterChip('Toutes',    'all'),
                 _FilterChip('Actives',   'active'),
-                _FilterChip('� Cacao',   'cacao'),
-                _FilterChip('�🌽 Maïs',    'mais'),
-                _FilterChip('🌾 Riz',     'riz'),
-                _FilterChip('� Manioc',  'manioc'),
-                _FilterChip('� Igname',  'igname'),
+                _FilterChip('🍫 Cacao',    'cacao'),
+                _FilterChip('☕ Café',      'cafe'),
+                _FilterChip('🌳 Hévéa',    'hevea'),
+                _FilterChip('🥜 Anacarde', 'anacarde'),
+                _FilterChip('🌽 Maïs',     'mais'),
+                _FilterChip('🌾 Riz',      'riz'),
+                _FilterChip('🥔 Manioc',   'manioc'),
+                _FilterChip('🍠 Igname',   'igname'),
               ].map((f) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: FilterChip(
@@ -383,9 +388,12 @@ class _ParcelleFormState extends State<_ParcelleForm> {
   final _villeCtrl= TextEditingController();
   final _descCtrl = TextEditingController();
   String _culture = 'cacao';
-  String _sol     = 'argileux';
+  String _sol     = 'ferrallitique';
   String _statut  = 'active';
   bool _saving    = false;
+  double? _lat;
+  double? _lon;
+  String _gpsInfo = '';
 
   @override
   void initState() {
@@ -447,35 +455,39 @@ class _ParcelleFormState extends State<_ParcelleForm> {
                   label: 'Ville / Zone', hint: 'Ex: Bouaké, Daloa, Korhogo',
                   controller: _villeCtrl)),
               ]),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _useGps,
+                  icon: const Icon(Icons.my_location, size: 18),
+                  label: const Text('Utiliser ma position GPS'),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.green500),
+                ),
+              ),
+              if (_gpsInfo.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(_gpsInfo,
+                    style: const TextStyle(fontSize: 13, color: AppColors.green700)),
+                ),
+              const SizedBox(height: 8),
 
               // Culture selector
               const Text('Culture *',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
                     color: AppColors.gray700)),
               const SizedBox(height: 8),
-              _buildDropdown('Culture', _culture, {
-                'cacao':    '🍫 Cacao',
-                'cafe':     '☕ Café',
-                'mais':     '🌽 Maïs',
-                'riz':      '🌾 Riz',
-                'manioc':   '� Manioc',
-                'igname':   '� Igname',
-                'coton':    '☁️ Coton',
-                'anacarde': '� Anacarde',
-                'palmier':  '🌴 Palmier à huile',
-                'hevea':    '🌳 Hévéa',
-              }, (v) => setState(() => _culture = v!)),
+              _buildDropdown('Culture', _culture, CiData.cultures,
+                  (v) => setState(() => _culture = v!)),
               const SizedBox(height: 14),
 
               const Text('Type de sol *',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
                     color: AppColors.gray700)),
               const SizedBox(height: 8),
-              _buildDropdown('Sol', _sol, {
-                'sableux': 'Sableux', 'argileux': 'Argileux',
-                'limoneux': 'Limoneux', 'lateritique': 'Latéritique',
-              }, (v) => setState(() => _sol = v!)),
+              _buildDropdown('Sol', _sol, CiData.sols,
+                  (v) => setState(() => _sol = v!)),
               const SizedBox(height: 14),
 
               const Text('Statut',
@@ -524,6 +536,47 @@ class _ParcelleFormState extends State<_ParcelleForm> {
     );
   }
 
+  Future<void> _useGps() async {
+    setState(() => _gpsInfo = 'Recherche de votre position…');
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        setState(() => _gpsInfo = 'Activez le GPS du téléphone, puis réessayez.');
+        return;
+      }
+      var perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+      if (perm == LocationPermission.denied ||
+          perm == LocationPermission.deniedForever) {
+        setState(() => _gpsInfo = 'Autorisation refusée : saisissez la ville à la main.');
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      final z = await ApiService().getZoneGps(pos.latitude, pos.longitude);
+      if (!mounted) return;
+      if (z['dans_le_pays'] != true) {
+        setState(() => _gpsInfo = '${z['message'] ?? 'Position hors de la Côte d\'Ivoire.'}');
+        return;
+      }
+      final cultures = (z['cultures_conseillees'] as List).join(', ');
+      setState(() {
+        _lat = double.parse(pos.latitude.toStringAsFixed(5));
+        _lon = double.parse(pos.longitude.toStringAsFixed(5));
+        _gpsInfo = '${z['zone_label']} · conseillé : $cultures';
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _gpsInfo = 'Position introuvable : réessayez dehors ou saisissez la ville.');
+      }
+    }
+  }
+
   Future<void> _save() async {
     if (!_key.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -535,6 +588,8 @@ class _ParcelleFormState extends State<_ParcelleForm> {
       'statut':     _statut,
       'ville':      _villeCtrl.text.trim().isEmpty ? null : _villeCtrl.text.trim(),
       'description':_descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+      if (_lat != null) 'latitude':  _lat,
+      if (_lon != null) 'longitude': _lon,
     });
     setState(() => _saving = false);
     if (mounted) Navigator.pop(context);

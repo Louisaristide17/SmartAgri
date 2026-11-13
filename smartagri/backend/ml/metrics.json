@@ -1,0 +1,82 @@
+{
+  "lignes_brutes": 6060,
+  "manquants_pluie": 181,
+  "manquants_temp": 123,
+  "doublons": 60,
+  "temperatures_aberrantes": 40,
+  "lignes_propres": 6000,
+  "cacao_rendement_moyen_par_zone": {
+    "sud": 0.621,
+    "foret": 0.73,
+    "centre": 0.372,
+    "nord": 0.138
+  },
+  "correlation_rendement": {
+    "pluviometrie": -0.021,
+    "temperature": -0.011,
+    "engrais_kg": 0.151
+  },
+  "rendement_moyen_par_culture": {
+    "mil": 0.29,
+    "cafe": 0.3,
+    "cacao": 0.47,
+    "anacarde": 0.54,
+    "sorgho": 0.55,
+    "arachide": 0.58,
+    "coton": 0.61,
+    "hevea": 0.94,
+    "mais": 1.18,
+    "riz": 2.3,
+    "igname": 5.78,
+    "manioc": 5.94,
+    "palmier": 8.2
+  },
+  "train": 4800,
+  "test": 1200,
+  "meilleurs_parametres": {
+    "m__regressor__learning_rate": 0.1,
+    "m__regressor__max_depth": 5,
+    "m__regressor__n_estimators": 400
+  },
+  "resultats": {
+    "Régression linéaire": {
+      "MAPE": 55.03771347150109,
+      "MAE": 0.7805293951145739,
+      "RMSE": 1.886880114660248,
+      "R2": 0.6318408029682854
+    },
+    "Random Forest": {
+      "MAPE": 11.539901627979683,
+      "MAE": 0.2285898794846539,
+      "RMSE": 0.48615369777631046,
+      "R2": 0.9755603925600042
+    },
+    "Gradient Boosting": {
+      "MAPE": 28.410603539852136,
+      "MAE": 0.37187808563913827,
+      "RMSE": 0.8051228267064289,
+      "R2": 0.9329696759933231
+    },
+    "Gradient Boosting réglé": {
+      "MAPE": 10.04722522881698,
+      "MAE": 0.19590615281108825,
+      "RMSE": 0.4510272075163591,
+      "R2": 0.9789645154419492
+    }
+  },
+  "modele_retenu": "Gradient Boosting réglé",
+  "cv_r2_moyen": 0.9806988136399266,
+  "cv_r2_ecart": 0.000998471570220325,
+  "exemple_nouvelle_prediction": {
+    "entree": {
+      "culture": "cacao",
+      "type_sol": "ferrallitique",
+      "zone": "foret",
+      "pluviometrie": 1600,
+      "temperature": 26,
+      "engrais_kg": 100
+    },
+    "modele": 0.822,
+    "formule": 0.92
+  }
+}

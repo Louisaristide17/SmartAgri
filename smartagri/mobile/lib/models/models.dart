@@ -1,6 +1,7 @@
 /// ================================================================
 ///  Modèles de données SmartAgri
 /// ================================================================
+import '../constants/ci_data.dart';
 
 // ── Utilisateur ─────────────────────────────────────────────────
 class UserModel {
@@ -88,13 +89,7 @@ class ParcelleModel {
     'description':description,
   };
 
-  String get cultureIcon {
-    const icons = {
-      'mais': '🌽', 'riz': '🌾', 'arachide': '🥜',
-      'sorgho': '🌿', 'mil': '🌿', 'coton': '☁️', 'manioc': '🥔',
-    };
-    return icons[culture] ?? '🌱';
-  }
+  String get cultureIcon => CiData.emoji(culture);
 
   String get statutLabel {
     const labels = {'active': 'Active', 'en_repos': 'En repos', 'recoltee': 'Récoltée'};
@@ -114,6 +109,8 @@ class PredictionModel {
   final double rendementPredit;
   final double? confiance;
   final DateTime? createdAt;
+  final String? zone;           // zone agro-écologique (renvoyée à la prédiction)
+  final String? avertissement;  // ex. culture peu adaptée à la zone
 
   PredictionModel({
     required this.id,
@@ -126,6 +123,8 @@ class PredictionModel {
     required this.rendementPredit,
     this.confiance,
     this.createdAt,
+    this.zone,
+    this.avertissement,
   });
 
   factory PredictionModel.fromJson(Map<String, dynamic> j) => PredictionModel(
@@ -139,6 +138,8 @@ class PredictionModel {
     rendementPredit: (j['rendement_predit'] as num).toDouble(),
     confiance:       (j['confiance']        as num?)?.toDouble(),
     createdAt:       j['created_at'] != null ? DateTime.tryParse(j['created_at']) : null,
+    zone:            j['zone']             as String?,
+    avertissement:   j['avertissement']    as String?,
   );
 }
 

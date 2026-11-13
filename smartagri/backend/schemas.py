@@ -148,31 +148,38 @@ class PredictionInput(BaseModel):
     superficie:   float   # ha
     type_sol:     str
     parcelle_id:  Optional[int] = None
+    ville:        Optional[str] = None      # ville ivoirienne (pour déterminer la zone agro-écologique)
 
     @field_validator("culture")
     @classmethod
     def culture_valid(cls, v):
-        allowed = {
-            "mais", "riz", "manioc", "igname",
-            "cacao", "cafe", "anacarde", "coton", "palmier", "hevea",
-            "arachide", "sorgho", "mil",
-        }
-        if v not in allowed:
-            raise ValueError(f"Culture invalide. Valeurs : {allowed}")
+        from referentiel_ci import CULTURES
+        if v not in CULTURES:
+            raise ValueError(f"Culture non prise en charge en Côte d'Ivoire. Valeurs : {sorted(CULTURES)}")
+        return v
+
+    @field_validator("type_sol")
+    @classmethod
+    def sol_valid(cls, v):
+        from referentiel_ci import SOLS
+        if v not in SOLS:
+            raise ValueError(f"Type de sol invalide. Valeurs : {sorted(SOLS)}")
         return v
 
     @field_validator("pluviometrie")
     @classmethod
     def pluv_range(cls, v):
-        if not (0 <= v <= 3000):
-            raise ValueError("Pluviométrie hors plage (0-3000 mm).")
+        from referentiel_ci import PLUV_API
+        if not (PLUV_API[0] <= v <= PLUV_API[1]):
+            raise ValueError(f"Pluviométrie hors plage pour la Côte d'Ivoire ({PLUV_API[0]}-{PLUV_API[1]} mm).")
         return v
 
     @field_validator("temperature")
     @classmethod
     def temp_range(cls, v):
-        if not (-10 <= v <= 55):
-            raise ValueError("Température hors plage (-10 à 55°C).")
+        from referentiel_ci import TEMP_API
+        if not (TEMP_API[0] <= v <= TEMP_API[1]):
+            raise ValueError(f"Température hors plage pour la Côte d'Ivoire ({TEMP_API[0]}-{TEMP_API[1]} °C).")
         return v
 
 
@@ -187,6 +194,8 @@ class PredictionOut(BaseModel):
     rendement_predit: float
     confiance:        Optional[float]
     created_at:       datetime
+    zone:             Optional[str] = None            # zone agro-écologique (renseignée à la prédiction)
+    avertissement:    Optional[str] = None            # ex. culture peu adaptée à la zone
 
     model_config = {"from_attributes": True}
 

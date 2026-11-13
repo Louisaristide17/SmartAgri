@@ -65,7 +65,7 @@
               </div>
             </div>
             <div class="meteo-banner-right">
-              <div class="meteo-city" id="mb-city">Dakar</div>
+              <div class="meteo-city" id="mb-city">Abidjan</div>
               <div class="meteo-arrow">›</div>
             </div>
           </div>
@@ -200,13 +200,19 @@
               <div class="m-select-wrap">
                 <select id="m-culture" class="m-select">
                   <option value="">Choisir…</option>
+                  <option value="cacao">🍫 Cacao</option>
+                  <option value="cafe">☕ Café</option>
+                  <option value="hevea">🌳 Hévéa</option>
+                  <option value="palmier">🌴 Palmier à huile</option>
+                  <option value="anacarde">🥜 Anacarde</option>
+                  <option value="coton">☁️ Coton</option>
                   <option value="mais">🌽 Maïs</option>
                   <option value="riz">🌾 Riz</option>
-                  <option value="arachide">🥜 Arachide</option>
-                  <option value="sorgho">🌿 Sorgho</option>
-                  <option value="mil">🌿 Mil</option>
-                  <option value="coton">☁️ Coton</option>
                   <option value="manioc">🥔 Manioc</option>
+                  <option value="igname">🍠 Igname</option>
+                  <option value="arachide">🥜 Arachide (Nord)</option>
+                  <option value="sorgho">🌿 Sorgho (Nord)</option>
+                  <option value="mil">🌿 Mil (Nord)</option>
                 </select>
               </div>
               <span class="m-err" id="err-m-culture"></span>
@@ -217,10 +223,13 @@
               <div class="m-select-wrap">
                 <select id="m-sol" class="m-select">
                   <option value="">Choisir…</option>
-                  <option value="sableux">Sableux</option>
+                  <option value="ferrallitique">Ferrallitique (dominant en CI)</option>
                   <option value="argileux">Argileux</option>
+                  <option value="hydromorphe">Hydromorphe (bas-fonds)</option>
+                  <option value="alluvionnaire">Alluvionnaire</option>
                   <option value="limoneux">Limoneux</option>
                   <option value="lateritique">Latéritique</option>
+                  <option value="sableux">Sableux</option>
                 </select>
               </div>
               <span class="m-err" id="err-m-sol"></span>
@@ -236,21 +245,21 @@
             <div class="m-slider-field">
               <div class="m-slider-row">
                 <label>💧 Pluviométrie</label>
-                <span class="m-slider-val" id="v-pluv">450 mm</span>
+                <span class="m-slider-val" id="v-pluv">1200 mm</span>
               </div>
-              <input type="range" id="m-pluv" min="0" max="2000" value="450" step="10"
+              <input type="range" id="m-pluv" min="300" max="2500" value="1200" step="10"
                      oninput="document.getElementById('v-pluv').textContent=this.value+' mm'"/>
-              <div class="m-slider-hints"><span>0 mm</span><span>Optimum ~600</span><span>2000 mm</span></div>
+              <div class="m-slider-hints"><span>300 mm</span><span>Moy. ~1200</span><span>2500 mm</span></div>
             </div>
 
             <div class="m-slider-field">
               <div class="m-slider-row">
                 <label>🌡️ Température</label>
-                <span class="m-slider-val" id="v-temp">26 °C</span>
+                <span class="m-slider-val" id="v-temp">27 °C</span>
               </div>
-              <input type="range" id="m-temp" min="10" max="45" value="26" step="0.5"
+              <input type="range" id="m-temp" min="18" max="38" value="27" step="0.5"
                      oninput="document.getElementById('v-temp').textContent=this.value+' °C'"/>
-              <div class="m-slider-hints"><span>10°C</span><span>Optimal ~26°C</span><span>45°C</span></div>
+              <div class="m-slider-hints"><span>18°C</span><span>Optimal ~27°C</span><span>38°C</span></div>
             </div>
 
             <div class="m-slider-field">
@@ -258,7 +267,7 @@
                 <label>🌿 Engrais</label>
                 <span class="m-slider-val" id="v-engrais">50 kg/ha</span>
               </div>
-              <input type="range" id="m-engrais" min="0" max="200" value="50" step="5"
+              <input type="range" id="m-engrais" min="0" max="300" value="50" step="5"
                      oninput="document.getElementById('v-engrais').textContent=this.value+' kg/ha'"/>
               <div class="m-slider-hints"><span>Sans</span><span>~50 kg/ha</span><span>200 kg/ha</span></div>
             </div>
@@ -321,11 +330,12 @@
 
           <!-- Villes rapides -->
           <div class="filter-chips">
-            <button class="chip active" onclick="mLoadVille('Dakar',this)">Dakar</button>
-            <button class="chip" onclick="mLoadVille('Thiès',this)">Thiès</button>
-            <button class="chip" onclick="mLoadVille('Saint-Louis',this)">St-Louis</button>
-            <button class="chip" onclick="mLoadVille('Ziguinchor',this)">Ziguinchor</button>
-            <button class="chip" onclick="mLoadVille('Kaolack',this)">Kaolack</button>
+            <button class="chip active" onclick="mLoadVille('Abidjan',this)">Abidjan</button>
+            <button class="chip" onclick="mLoadVille('Bouaké',this)">Bouaké</button>
+            <button class="chip" onclick="mLoadVille('Daloa',this)">Daloa</button>
+            <button class="chip" onclick="mLoadVille('Korhogo',this)">Korhogo</button>
+            <button class="chip" onclick="mLoadVille('San-Pédro',this)">San-Pédro</button>
+            <button class="chip" onclick="mLoadVille('Yamoussoukro',this)">Yamoussoukro</button>
           </div>
 
           <!-- Carte météo principale -->
@@ -471,13 +481,19 @@
               <label>Culture *</label>
               <select id="d-culture" class="m-select">
                 <option value="">Choisir…</option>
+                <option value="cacao">🍫 Cacao</option>
+                <option value="cafe">☕ Café</option>
+                <option value="hevea">🌳 Hévéa</option>
+                <option value="palmier">🌴 Palmier à huile</option>
+                <option value="anacarde">🥜 Anacarde</option>
+                <option value="coton">☁️ Coton</option>
                 <option value="mais">🌽 Maïs</option>
                 <option value="riz">🌾 Riz</option>
-                <option value="arachide">🥜 Arachide</option>
-                <option value="sorgho">🌿 Sorgho</option>
-                <option value="mil">🌿 Mil</option>
-                <option value="coton">☁️ Coton</option>
                 <option value="manioc">🥔 Manioc</option>
+                <option value="igname">🍠 Igname</option>
+                <option value="arachide">🥜 Arachide (Nord)</option>
+                <option value="sorgho">🌿 Sorgho (Nord)</option>
+                <option value="mil">🌿 Mil (Nord)</option>
               </select>
               <span class="m-err" id="derr-culture"></span>
             </div>
@@ -485,17 +501,22 @@
               <label>Type de sol *</label>
               <select id="d-sol" class="m-select">
                 <option value="">Choisir…</option>
-                <option value="sableux">Sableux</option>
+                <option value="ferrallitique">Ferrallitique (dominant en CI)</option>
                 <option value="argileux">Argileux</option>
+                <option value="hydromorphe">Hydromorphe (bas-fonds)</option>
+                <option value="alluvionnaire">Alluvionnaire</option>
                 <option value="limoneux">Limoneux</option>
                 <option value="lateritique">Latéritique</option>
+                <option value="sableux">Sableux</option>
               </select>
               <span class="m-err" id="derr-sol"></span>
             </div>
           </div>
           <div class="m-field">
             <label>Ville / Zone</label>
-            <input type="text" id="d-ville" class="m-input" placeholder="Ex: Thiès"/>
+            <input type="text" id="d-ville" class="m-input" placeholder="Ex: Daloa"/>
+            <button type="button" class="chip" style="margin-top:8px" onclick="mUseGps()">📍 Utiliser ma position GPS</button>
+            <small id="d-gps-info" style="display:block;margin-top:6px;color:#2D6A4F"></small>
           </div>
           <div class="m-field">
             <label>Description</label>

@@ -12,6 +12,7 @@ from database import get_db
 from models import Conversation, User
 from schemas import MessageIn, MessageOut
 from auth import get_current_user
+from agent_tools import run_agent
 
 router = APIRouter(prefix="/api/agribot", tags=["AgriBot"])
 
@@ -23,16 +24,13 @@ KNOWLEDGE_BASE = [
         "patterns": [r"rende?ment", r"production", r"récolte"],
         "response": (
             "📊 **Rendements moyens indicatifs en Côte d'Ivoire :**\n\n"
-            "| Culture    | Rendement moyen  |\n"
-            "|------------|------------------|\n"
-            "| Cacao      | 0.5 – 1.2 t/ha   |\n"
-            "| Café       | 0.4 – 0.8 t/ha   |\n"
-            "| Maïs       | 1.5 – 3.5 t/ha   |\n"
-            "| Riz        | 2.0 – 4.5 t/ha   |\n"
-            "| Manioc     | 8.0 – 15.0 t/ha  |\n"
-            "| Igname     | 5.0 – 12.0 t/ha  |\n"
-            "| Banane     | 10.0 – 25.0 t/ha |\n"
-            "| Coton      | 1.0 – 2.0 t/ha   |\n\n"
+            "• **Cacao** : 0,5 – 1,2 t/ha\n"
+            "• **Café** : 0,4 – 0,8 t/ha\n"
+            "• **Maïs** : 1,5 – 3,5 t/ha\n"
+            "• **Riz** : 2,0 – 4,5 t/ha\n"
+            "• **Manioc** : 8 – 15 t/ha\n"
+            "• **Igname** : 5 – 12 t/ha\n"
+            "• **Coton** : 1,0 – 2,0 t/ha\n\n"
             "💡 Utilisez l'outil **Prédiction** pour un calcul personnalisé à votre parcelle."
         )
     },
@@ -227,14 +225,17 @@ async def send_message(
     history = (
         db.query(Conversation)
         .filter(Conversation.user_id == current_user.id)
-        .order_by(Conversation.created_at.desc())
+        .order_by(Conversation.id.desc())
         .limit(20)
         .all()
     )
     history_list = [{"role": m.role, "content": m.content} for m in reversed(history)]
 
-    # Générer la réponse
-    if OPENAI_KEY:
+    # Agent : essaie d'abord les outils (base de données, modèle ML), avec mémoire de la conversation
+    agent_reply, outils = run_agent(payload.content, db, current_user, history_list[:-1])
+    if agent_reply:
+        response_text = agent_reply + (f"\n\n_🔧 Outil utilisé : {', '.join(outils)}_" if outils and outils != ["garde-fou"] else "")
+    elif OPENAI_KEY:
         response_text = await get_openai_response(history_list, payload.content)
     else:
         response_text = get_bot_response(payload.content)

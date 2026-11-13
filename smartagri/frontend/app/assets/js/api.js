@@ -54,20 +54,42 @@ async function request(method, path, body = null, auth = true) {
   const config = { method, headers };
   if (body) config.body = JSON.stringify(body);
 
-  const response = await fetch(`${API_BASE}${path}`, config);
+  // Render (offre gratuite) s'endort : on réessaie quelques fois avant d'abandonner
+  let response;
+  const MAX_TRIES = 4;
+  for (let i = 1; i <= MAX_TRIES; i++) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 45000);
+      response = await fetch(`${API_BASE}${path}`, { ...config, signal: ctrl.signal });
+      clearTimeout(timer);
+      // 502/503/504 = serveur en train de démarrer : on réessaie
+      if ([502, 503, 504].includes(response.status) && i < MAX_TRIES) {
+        await new Promise(r => setTimeout(r, 5000));
+        continue;
+      }
+      break;
+    } catch (e) {
+      if (i === MAX_TRIES) {
+        throw new Error("Impossible de joindre le serveur. S'il vient de se réveiller, patientez 1 minute puis réessayez.");
+      }
+      await new Promise(r => setTimeout(r, 5000));
+    }
+  }
 
-  // Token expiré → redirection login
-  if (response.status === 401) {
+  // Token expiré → retour au login (uniquement pour les routes protégées)
+  if (response.status === 401 && auth) {
     Auth.logout();
     return;
   }
 
   if (response.status === 204) return null; // No content
 
-  const data = await response.json();
+  let data = null;
+  try { data = await response.json(); } catch { /* réponse non JSON */ }
 
   if (!response.ok) {
-    const message = data?.detail || 'Une erreur est survenue.';
+    const message = data?.detail || `Erreur serveur (${response.status}).`;
     throw new Error(Array.isArray(message)
       ? message.map(e => e.msg).join(', ')
       : message
@@ -109,6 +131,7 @@ const ApiParcelles = {
 const ApiPrediction = {
   async predict(payload)  { return request('POST', '/api/prediction/', payload); },
   async historique()      { return request('GET',  '/api/prediction/historique'); },
+  async zoneGps(lat, lon) { return request('GET',  `/api/prediction/zone?latitude=${lat}&longitude=${lon}`); },
 };
 
 /* ───────────────────────────────────────────
