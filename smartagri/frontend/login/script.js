@@ -116,14 +116,7 @@ document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     Auth.setToken(data.access_token);
     Auth.setUser(data.user);
 
-    // Masquer le formulaire, afficher le choix de plateforme
-    document.getElementById('login-form').style.display   = 'none';
-    document.querySelector('.or-divider')?.style && (document.querySelector('.or-divider').style.display = 'none');
-    document.querySelector('.social-row')?.style  && (document.querySelector('.social-row').style.display  = 'none');
-    document.querySelector('.alert-demo')?.style  && (document.querySelector('.alert-demo').style.display  = 'none');
-    document.querySelector('.row-sb')?.style      && (document.querySelector('.row-sb').style.display      = 'none');
-    showAlert('login-alert', `✅ Bienvenue ${data.user.firstname} ! Choisissez votre plateforme ci-dessous.`, 'success');
-    document.getElementById('platform-box').style.display = 'block';
+    showPlatformChoice(data.user.firstname);
   } catch (err) {
     showAlert('login-alert', '❌ ' + err.message);
   } finally {
@@ -193,6 +186,17 @@ function socialDemo(provider) {
   alert(`Connexion avec ${provider} — connectez votre OAuth dans le backend FastAPI.`);
 }
 
+/* ── Choix de la plateforme (Web / Mobile) : toujours proposé après connexion ── */
+function showPlatformChoice(prenom) {
+  document.getElementById('login-form').style.display = 'none';
+  ['.or-divider', '.social-row', '.alert-demo', '.row-sb'].forEach(sel => {
+    const el = document.querySelector(sel); if (el) el.style.display = 'none';
+  });
+  document.getElementById('session-box')?.remove();
+  showAlert('login-alert', `✅ Bienvenue ${prenom || ''} ! Choisissez votre plateforme ci-dessous.`, 'success');
+  document.getElementById('platform-box').style.display = 'block';
+}
+
 /* ── Redirection après connexion ── */
 function goToApp(platform) {
   if (platform === 'web') {
@@ -223,6 +227,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     const me = await request('GET', '/api/auth/me');
     const box = document.createElement('div');
+    box.id = 'session-box';
     box.className = 'form-alert success';
     box.style.cssText = 'display:block;margin-bottom:14px;';
     box.innerHTML = `Session ouverte : <strong>${me.firstname || me.email}</strong> ` +
@@ -230,7 +235,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       `<button type="button" id="btn-switch" style="margin-left:4px;cursor:pointer">Changer de compte</button>`;
     const form = document.getElementById('login-form');
     form.parentNode.insertBefore(box, form);
-    document.getElementById('btn-continue').onclick = () => { window.location.href = '../app/pages/dashboard.html'; };
+    document.getElementById('btn-continue').onclick = () => showPlatformChoice(me.firstname);
     document.getElementById('btn-switch').onclick = () => { Auth.removeToken(); Auth.removeUser(); box.remove(); };
   } catch (e) {
     Auth.removeToken(); Auth.removeUser();   // jeton périmé : on repart de zéro
