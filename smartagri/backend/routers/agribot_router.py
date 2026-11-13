@@ -235,12 +235,13 @@ async def send_message(
     agent_reply, outils = run_agent(payload.content, db, current_user, history_list[:-1])
     if agent_reply:
         response_text = politesse(agent_reply, payload.content, current_user, outils)
-        if outils and outils not in (["garde-fou"], ["conversation"]):
+        if outils and outils not in (["garde-fou"], ["conversation"], ["fiche ciblée"]):
             response_text += f"\n\n_🔧 Outil utilisé : {', '.join(outils)}_"
     elif OPENAI_KEY:
         response_text = await get_openai_response(history_list, payload.content)
     else:
-        response_text = politesse(get_bot_response(payload.content), payload.content, current_user, [])
+        from savoir import focaliser
+        response_text = politesse(focaliser(get_bot_response(payload.content), payload.content), payload.content, current_user, [])
 
     # Sauvegarder la réponse
     bot_msg = Conversation(

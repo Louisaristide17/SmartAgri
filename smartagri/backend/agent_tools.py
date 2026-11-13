@@ -110,6 +110,11 @@ def run_agent(message: str, db: Session, user: User, history: List[dict]) -> Tup
         z = zone_depuis_ville(ville)
         if z:
             return cultures_de_la_zone(z), ["cultures_de_la_zone"]
+    # question ciblée sur UN sol, UNE culture, UNE structure : on répond uniquement sur cet élément
+    from savoir import reponse_ciblee
+    cible = reponse_ciblee(message, _culture_dans(message))
+    if cible:
+        return cible, ["fiche ciblée"]
     return None, []
 
 

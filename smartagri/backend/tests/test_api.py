@@ -119,3 +119,27 @@ def test_reponses_factuelles_courtoises(client, auth):
     rep = _dire(client, auth, "Quel rendement pour le maïs à Bouaké ?")
     assert "t/ha" in rep and ("disposition" in rep or "plaisir" in rep or "récolte" in rep or "précisions" in rep)
     assert "Je vous prie de m'excuser" in _dire(client, auth, "azertyuiop qsdfghjkl")
+
+# ───────── Réponses ciblées : on répond sur CE qui est demandé, pas sur toute la liste ─────────
+def test_sol_argileux_uniquement(client, auth):
+    rep = _dire(client, auth, "C'est quoi un sol argileux ?")
+    assert "argileux" in rep.lower()
+    for autre in ("sableux", "hydromorphe", "gravillonnaire", "ferrallitique", "alluvionnaire"):
+        assert autre not in rep.lower(), f"la réponse parle aussi du sol {autre}"
+
+def test_chaque_sol_a_sa_fiche(client, auth):
+    for sol in ("sableux", "limoneux", "latéritique", "ferrallitique", "hydromorphe", "alluvionnaire"):
+        rep = _dire(client, auth, f"Parle-moi du sol {sol}")
+        assert f"Sol {sol}" in rep
+
+def test_culture_uniquement(client, auth):
+    rep = _dire(client, auth, "Parle-moi de l'igname")
+    assert "Igname" in rep and "Cacao" not in rep
+
+def test_engrais_riz_ne_liste_pas_tout(client, auth):
+    rep = _dire(client, auth, "Quel engrais pour le riz ?")
+    assert "DAP" in rep and "15-15-15" not in rep
+
+def test_saison_sud_sans_nord(client, auth):
+    rep = _dire(client, auth, "Quelle est la saison des pluies au sud ?")
+    assert "Zone Sud" in rep and "harmattan" not in rep
