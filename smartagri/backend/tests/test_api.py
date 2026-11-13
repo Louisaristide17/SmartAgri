@@ -143,3 +143,64 @@ def test_engrais_riz_ne_liste_pas_tout(client, auth):
 def test_saison_sud_sans_nord(client, auth):
     rep = _dire(client, auth, "Quelle est la saison des pluies au sud ?")
     assert "Zone Sud" in rep and "harmattan" not in rep
+
+
+# ───────── Agent LLM (Groq) — serveur simulé : aucun accès réseau nécessaire ─────────
+class _Rep:
+    def __init__(self, data): self._d = data
+    def raise_for_status(self): pass
+    def json(self): return self._d
+
+
+def _faux_groq(scenario):
+    """scenario : liste de réponses `message` renvoyées successivement par le faux LLM."""
+    appels = []
+    class FauxClient:
+        def __init__(self, *a, **k): pass
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def post(self, url, headers=None, json=None):
+            appels.append(json)
+            return _Rep({"choices": [{"message": scenario[min(len(appels) - 1, len(scenario) - 1)]}]})
+    return FauxClient, appels
+
+
+def test_llm_agent_appelle_un_outil_puis_repond(client, auth, monkeypatch):
+    import llm_agent
+    monkeypatch.setenv("GROQ_API_KEY", "cle-de-test")
+    faux, appels = _faux_groq([
+        {"content": "", "tool_calls": [{"id": "c1", "type": "function", "function": {
+            "name": "predire_rendement", "arguments": '{"culture":"cacao","ville":"Daloa"}'}}]},
+        {"content": "Bonjour ! Le cacao à Daloa donnerait environ X t/ha. Puis-je vous aider autrement ?"},
+    ])
+    monkeypatch.setattr(llm_agent.httpx, "Client", faux)
+    r = client.post("/api/agribot/message", json={"content": "Quel rendement pour mon cacao à Daloa ?"}, headers=auth)
+    assert r.status_code == 200
+    txt = r.json()["content"]
+    assert "Outils appelés" in txt and "predire_rendement" in txt
+    assert len(appels) == 2                                   # tour 1 : choix de l'outil, tour 2 : rédaction
+    msg_outil = [m for m in appels[1]["messages"] if m["role"] == "tool"][0]
+    assert "t/ha" in msg_outil["content"]                     # le résultat du modèle ML a bien été fourni au LLM
+
+
+def test_llm_garde_fou_avant_le_llm(client, auth, monkeypatch):
+    import llm_agent
+    monkeypatch.setenv("GROQ_API_KEY", "cle-de-test")
+    faux, appels = _faux_groq([{"content": "ne doit jamais être appelé"}])
+    monkeypatch.setattr(llm_agent.httpx, "Client", faux)
+    r = client.post("/api/agribot/message", json={"content": "Où acheter du paraquat ?"}, headers=auth)
+    assert r.status_code == 200 and "homologu" in r.json()["content"].lower()
+    assert appels == []                                       # le LLM n'a même pas été sollicité
+
+
+def test_llm_en_panne_repli_sur_regles(client, auth, monkeypatch):
+    import llm_agent
+    monkeypatch.setenv("GROQ_API_KEY", "cle-de-test")
+    class Panne:
+        def __init__(self, *a, **k): pass
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def post(self, *a, **k): raise RuntimeError("réseau coupé")
+    monkeypatch.setattr(llm_agent.httpx, "Client", Panne)
+    r = client.post("/api/agribot/message", json={"content": "Quelles sont mes parcelles ?"}, headers=auth)
+    assert r.status_code == 200 and "parcelle" in r.json()["content"].lower()

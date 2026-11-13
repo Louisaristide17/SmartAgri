@@ -84,6 +84,15 @@ def cultures_de_la_zone(zone: str) -> str:
 
 
 # ───────── Agent ─────────
+def garde_fou(message: str) -> Optional[str]:
+    """Garde-fous appliqués AVANT tout appel au LLM (produits interdits, hors-domaine)."""
+    m = message.lower()
+    for pattern, reponse in REFUS:
+        if re.search(pattern, m):
+            return reponse
+    return None
+
+
 def run_agent(message: str, db: Session, user: User, history: List[dict]) -> Tuple[Optional[str], List[str]]:
     """Retourne (réponse, outils utilisés). Réponse None -> laisser le LLM / la base de règles répondre."""
     m = message.lower()
@@ -100,7 +109,7 @@ def run_agent(message: str, db: Session, user: User, history: List[dict]) -> Tup
         if h["role"] == "user" and h["content"] != message:
             culture = culture or _culture_dans(h["content"]); ville = ville or _ville_dans(h["content"])
 
-    if re.search(r"mes parcelles|mes champs|combien de parcelles|mes plantations", m):
+    if re.search(r"mes parcelles|mes champs|mes plantations|parcelles? (ai|possède|enregistr)|combien.{0,15}parcelles|liste.{0,15}parcelles", m):
         return mes_parcelles(db, user), ["mes_parcelles"]
     if re.search(r"mes pr[ée]dictions|mon historique|derni[èe]res? pr[ée]diction", m):
         return mes_predictions(db, user), ["mes_predictions"]

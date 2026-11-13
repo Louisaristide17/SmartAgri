@@ -12,4 +12,8 @@
 - Données simulées (pas de jeu public ivoirien) : pipeline prêt pour de vraies données.
 - Agent : choix d'outil par règles ; le mode LLM (OpenAI) n'est actif que si `OPENAI_API_KEY` est définie.
 - SQLite est effacée à chaque redéploiement Render gratuit (la démo se recrée au démarrage).
-- Pas de version Desktop (non requise : la grille propose Web, Mobile ou Desktop).
+- ⚠️ Version Desktop : NON réalisée à ce jour (la grille note Web, Mobile et Desktop, /10 chacun) — à ajouter.
+
+## Mises à jour (13/11/2026)
+- **Bloc 1** : source réelle FAOSTAT (Utilisation des terres, CI 2020-2025) dans `backend/ml/data/`, script `ml/faostat_contexte.py`.
+- **Bloc 4** : agent LLM réel (Groq, `llm_agent.py`) avec appel d'outils ; garde-fous appliqués avant le LLM ; repli sur l'agent à règles. Activé par la variable `GROQ_API_KEY` (Render). 29 tests.

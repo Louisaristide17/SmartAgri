@@ -34,3 +34,10 @@ La chaîne complète (nettoyage → entraînement → évaluation → API) est p
 
 ## Limite à connaître
 Un R² élevé mesure la capacité à retrouver le référentiel simulé, pas à prédire le rendement réel d'un champ.
+
+## Source de données réelle : FAOSTAT
+`ml/data/faostat_ci_utilisation_terres.csv` (FAO, domaine *Utilisation des terres*, Côte d'Ivoire, 2020-2025) donne le
+contexte réel : ~26 millions d'ha de terres agricoles, ~13 millions en culture dont ~8,5 millions en cultures permanentes
+(cacao, café, hévéa…), forêts en recul (4,18 → 3,77 M ha entre 2020 et 2025), seulement 0,5 % des terres en culture irriguées.
+`python ml/faostat_contexte.py` régénère `faostat_contexte.json` et `figures/faostat_terres.png`.
+**Limite assumée :** ce jeu ne contient pas de rendements par culture ; les rendements d'entraînement restent simulés.

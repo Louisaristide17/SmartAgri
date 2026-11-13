@@ -12,7 +12,8 @@ from database import get_db
 from models import Conversation, User
 from schemas import MessageIn, MessageOut
 from auth import get_current_user
-from agent_tools import run_agent, politesse
+from agent_tools import run_agent, politesse, garde_fou, conversation_courante
+import llm_agent
 
 router = APIRouter(prefix="/api/agribot", tags=["AgriBot"])
 
@@ -231,17 +232,33 @@ async def send_message(
     )
     history_list = [{"role": m.role, "content": m.content} for m in reversed(history)]
 
-    # Agent : essaie d'abord les outils (base de données, modèle ML), avec mémoire de la conversation
-    agent_reply, outils = run_agent(payload.content, db, current_user, history_list[:-1])
-    if agent_reply:
-        response_text = politesse(agent_reply, payload.content, current_user, outils)
-        if outils and outils not in (["garde-fou"], ["conversation"], ["fiche ciblée"]):
-            response_text += f"\n\n_🔧 Outil utilisé : {', '.join(outils)}_"
-    elif OPENAI_KEY:
-        response_text = await get_openai_response(history_list, payload.content)
+    response_text, outils = None, []
+
+    # 1) Garde-fous : toujours appliqués en premier, avant tout appel à un LLM
+    refus = garde_fou(payload.content)
+    if refus:
+        response_text = politesse(refus, payload.content, current_user, ["garde-fou"])
     else:
-        from savoir import focaliser
-        response_text = politesse(focaliser(get_bot_response(payload.content), payload.content), payload.content, current_user, [])
+        # 2) Agent LLM (Groq) : choisit lui-même ses outils, reçoit leurs résultats, rédige la réponse
+        if llm_agent.disponible():
+            rep, outils = llm_agent.run_llm_agent(payload.content, db, current_user, history_list[:-1])
+            if rep:
+                response_text = rep
+                if outils:
+                    response_text += f"\n\n_🔧 Outils appelés par l'agent : {', '.join(outils)}_"
+        # 3) Repli : agent à règles (outils BD + modèle ML), puis base de connaissances
+        if not response_text:
+            agent_reply, outils = run_agent(payload.content, db, current_user, history_list[:-1])
+            if agent_reply:
+                response_text = politesse(agent_reply, payload.content, current_user, outils)
+                if outils and outils not in (["garde-fou"], ["conversation"], ["fiche ciblée"]):
+                    response_text += f"\n\n_🔧 Outil utilisé : {', '.join(outils)}_"
+            elif OPENAI_KEY:
+                response_text = await get_openai_response(history_list, payload.content)
+            else:
+                from savoir import focaliser
+                response_text = politesse(focaliser(get_bot_response(payload.content), payload.content),
+                                          payload.content, current_user, [])
 
     # Sauvegarder la réponse
     bot_msg = Conversation(
