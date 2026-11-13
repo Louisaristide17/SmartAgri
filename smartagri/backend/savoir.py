@@ -198,3 +198,34 @@ def focaliser(reponse: str, message: str) -> str:
     for b in gardes:
         sortie += b
     return "\n".join(sortie + pied_final)
+
+
+# ───────── Sols d'une ville (réponse locale, pas la liste générale) ─────────
+SOLS_ZONE = {
+    "sud": ("sols sableux côtiers et sols ferrallitiques sableux, avec des bas-fonds hydromorphes (lagunes)",
+            "cocotier, palmier à huile, hévéa, ananas, banane, maraîchage",
+            "sols légers qui retiennent mal l'eau et les engrais : fractionnez les apports et apportez de la matière organique"),
+    "foret": ("sols ferrallitiques (profonds, acides, assez pauvres en éléments minéraux) et des bas-fonds hydromorphes",
+              "cacao, café, hévéa, banane plantain, igname, manioc ; riz dans les bas-fonds",
+              "corrigez l'acidité (chaulage), apportez de l'engrais et gardez un couvert végétal contre l'érosion"),
+    "centre": ("sols ferrallitiques jaunes à gravillons et sols de transition forêt-savane, avec des bas-fonds humides",
+               "igname, manioc, maïs, riz de bas-fonds, café, anacarde, coton",
+               "sols assez vite épuisés : alternez les cultures, laissez des jachères et enrichissez en matière organique"),
+    "nord": ("sols ferrugineux tropicaux, souvent gravillonnaires et peu profonds, avec des bas-fonds alluviaux fertiles",
+             "coton, anacarde, maïs, sorgho, mil, igname ; riz dans les bas-fonds",
+             "sols pauvres en matière organique : fumure organique, paillage et gestion de l'eau sont indispensables"),
+}
+NOTES_VILLE = {
+    "man": "La région de Man est montagneuse (Dix-Huit Montagnes) : sur les pentes, le risque d'érosion est élevé, d'où l'intérêt des cultures en courbes de niveau et d'un couvert végétal ; les bas-fonds conviennent bien au riz et au maraîchage.",
+}
+
+
+def fiche_sols_ville(ville: str, zone: str) -> str:
+    sols, cultures, conseil = SOLS_ZONE[zone]
+    note = NOTES_VILLE.get(ville)
+    return (f"📍 **Les sols de {ville.title()}** ({ZONES[zone].split(' (')[0]}) :\n\n"
+            f"Oui, ils sont cultivables. On y trouve surtout des {sols}.\n\n"
+            f"• **Cultures qui y réussissent :** {cultures}\n"
+            f"• **Conseil :** {conseil}\n"
+            + (f"• **À savoir :** {note}\n" if note else "")
+            + "\n💡 Ces informations sont indicatives : un test de sol à l'ANADER vous donnera la réponse exacte pour votre parcelle.")

@@ -204,3 +204,10 @@ def test_llm_en_panne_repli_sur_regles(client, auth, monkeypatch):
     monkeypatch.setattr(llm_agent.httpx, "Client", Panne)
     r = client.post("/api/agribot/message", json={"content": "Quelles sont mes parcelles ?"}, headers=auth)
     assert r.status_code == 200 and "parcelle" in r.json()["content"].lower()
+
+
+def test_sols_d_une_ville_repond_sur_la_ville(client, auth):
+    r = client.post("/api/agribot/message", json={"content": "les sols de Man sont-ils pratiquables ?"}, headers=auth)
+    txt = r.json()["content"]
+    assert r.status_code == 200 and "Man" in txt and "cultivables" in txt
+    assert "Sol hydromorphe (bas-fonds)" not in txt            # pas la liste générale des sols

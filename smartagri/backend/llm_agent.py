@@ -44,6 +44,8 @@ OUTILS = [
             "required": ["culture"]}}},
     {"type": "function", "function": {"name": "cultures_de_la_zone", "description": "Cultures les mieux adaptées à une zone agro-écologique.",
         "parameters": {"type": "object", "properties": {"zone": {"type": "string", "enum": list(ZONES)}}, "required": ["zone"]}}},
+    {"type": "function", "function": {"name": "sols_de_la_ville", "description": "Sols d'une ville ivoirienne (types, praticabilité, cultures adaptées, conseils). À utiliser dès qu'on parle des sols/terres d'une ville.",
+        "parameters": {"type": "object", "properties": {"ville": {"type": "string", "description": "Ville ivoirienne, ex: Man"}}, "required": ["ville"]}}},
     {"type": "function", "function": {"name": "fiche_sol", "description": "Fiche détaillée d'UN type de sol.",
         "parameters": {"type": "object", "properties": {"sol": {"type": "string", "enum": list(SOLS)}}, "required": ["sol"]}}},
     {"type": "function", "function": {"name": "fiche_culture", "description": "Fiche détaillée d'UNE culture.",
@@ -69,6 +71,10 @@ def _executer(nom: str, args: dict, db: Session, user: User) -> str:
             return T.predire_rendement(culture, args.get("ville"), sol, float(args.get("engrais_kg") or 80))
         if nom == "cultures_de_la_zone":
             return T.cultures_de_la_zone(args["zone"]) if args.get("zone") in ZONES else "Zone inconnue."
+        if nom == "sols_de_la_ville":
+            v = T.normaliser(args.get("ville", "")).strip().replace(" ", "-")
+            z = zone_depuis_ville(v)
+            return savoir.fiche_sols_ville(v, z) if z else "Ville inconnue dans notre référentiel."
         if nom == "fiche_sol":
             return savoir.fiche_sol(args.get("sol", ""))
         if nom == "fiche_culture":

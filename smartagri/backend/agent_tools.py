@@ -109,6 +109,12 @@ def run_agent(message: str, db: Session, user: User, history: List[dict]) -> Tup
         if h["role"] == "user" and h["content"] != message:
             culture = culture or _culture_dans(h["content"]); ville = ville or _ville_dans(h["content"])
 
+    # sols d'une VILLE citée dans le message (et non héritée de la conversation) -> réponse locale
+    ville_msg = _ville_dans(message)
+    if ville_msg and zone_depuis_ville(ville_msg) and re.search(r"\bsols?\b|\bterres?\b|terrains?|pratiqu|cultivable|fertile", m):
+        from savoir import fiche_sols_ville
+        return fiche_sols_ville(ville_msg, zone_depuis_ville(ville_msg)), ["sols_de_la_ville"]
+
     if re.search(r"mes parcelles|mes champs|mes plantations|parcelles? (ai|possède|enregistr)|combien.{0,15}parcelles|liste.{0,15}parcelles", m):
         return mes_parcelles(db, user), ["mes_parcelles"]
     if re.search(r"mes pr[ée]dictions|mon historique|derni[èe]res? pr[ée]diction", m):
