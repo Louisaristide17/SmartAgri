@@ -1,6 +1,6 @@
-
 *.zip
 *.apk
+!frontend/mobile/smartagri.apk
 venv/
 __pycache__/
 .env
