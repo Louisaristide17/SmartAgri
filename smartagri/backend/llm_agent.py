@@ -16,8 +16,17 @@ from referentiel_ci import CULTURES, ZONES, SOLS, zone_depuis_ville
 import agent_tools as T
 import savoir
 
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+# Fournisseurs compatibles OpenAI (même format d'appel d'outils). Ordre = ordre d'essai ;
+# LLM_PROVIDER=groq|deepseek force celui à essayer en premier.
+def _fournisseurs():
+    liste = [
+        ("deepseek", "https://api.deepseek.com/chat/completions", os.getenv("DEEPSEEK_MODEL", "deepseek-chat"), os.getenv("DEEPSEEK_API_KEY", "")),
+        ("groq", "https://api.groq.com/openai/v1/chat/completions", os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"), os.getenv("GROQ_API_KEY", "")),
+    ]
+    liste.append(("claude", "https://api.anthropic.com/v1/messages", os.getenv("ANTHROPIC_MODEL", "claude-haiku-5-5"), os.getenv("ANTHROPIC_API_KEY", "")))
+    liste = [f for f in liste if f[3]]
+    prefere = os.getenv("LLM_PROVIDER", "").lower()
+    return sorted(liste, key=lambda f: f[0] != prefere)
 MAX_TOURS = 3
 
 SYSTEM = """Tu es AgriBot, assistant agricole expert de la Côte d'Ivoire, intégré à l'application SmartAgri.
@@ -54,7 +63,7 @@ OUTILS = [
 
 
 def disponible() -> bool:
-    return bool(os.getenv("GROQ_API_KEY"))
+    return bool(_fournisseurs())
 
 
 def _executer(nom: str, args: dict, db: Session, user: User) -> str:
@@ -84,37 +93,75 @@ def _executer(nom: str, args: dict, db: Session, user: User) -> str:
     return "Outil inconnu."
 
 
-def run_llm_agent(message: str, db: Session, user: User, history: List[dict]) -> Tuple[Optional[str], List[str]]:
-    """Boucle agent : LLM -> outils -> LLM. Retourne (réponse, outils) ou (None, []) si indisponible."""
-    cle = os.getenv("GROQ_API_KEY")
-    if not cle:
-        return None, []
+def _boucle_claude(url, modele, cle, message, db, user, history):
+    """Même boucle agent avec l'API Messages d'Anthropic (format d'outils différent)."""
+    outils = [{"name": o["function"]["name"], "description": o["function"]["description"],
+               "input_schema": o["function"]["parameters"]} for o in OUTILS]
+    msgs = []
+    for h in history[-10:]:
+        msgs.append({"role": h["role"], "content": h["content"][:1200]})
+    msgs.append({"role": "user", "content": message})
+    utilises: List[str] = []
+    with httpx.Client(timeout=25) as client:
+        for _ in range(MAX_TOURS):
+            r = client.post(url, headers={"x-api-key": cle, "anthropic-version": "2023-06-01"},
+                            json={"model": modele, "max_tokens": 600, "temperature": 0.3,
+                                  "system": SYSTEM + f"\nL'utilisateur s'appelle {T._prenom(user)}.",
+                                  "tools": outils, "messages": msgs})
+            r.raise_for_status()
+            blocs = r.json().get("content", [])
+            appels = [b for b in blocs if b.get("type") == "tool_use"]
+            if not appels:
+                return "".join(b.get("text", "") for b in blocs if b.get("type") == "text").strip() or None, utilises
+            msgs.append({"role": "assistant", "content": blocs})
+            resultats = []
+            for a in appels:
+                utilises.append(a["name"] + (" (modèle ML)" if a["name"] == "predire_rendement" else ""))
+                resultats.append({"type": "tool_result", "tool_use_id": a["id"],
+                                  "content": _executer(a["name"], a.get("input") or {}, db, user)})
+            msgs.append({"role": "user", "content": resultats})
+    return None, utilises
+
+
+def _boucle(nom_fournisseur, url, modele, cle, message, db, user, history):
+    """Boucle agent : LLM -> outils -> LLM, pour UN fournisseur. Lève une exception en cas d'échec."""
+    if nom_fournisseur == "claude":
+        return _boucle_claude(url, modele, cle, message, db, user, history)
     msgs = [{"role": "system", "content": SYSTEM + f"\nL'utilisateur s'appelle {T._prenom(user)}."}]
     for h in history[-10:]:                                   # mémoire de la conversation
         msgs.append({"role": h["role"], "content": h["content"][:1200]})
     msgs.append({"role": "user", "content": message})
     utilises: List[str] = []
-    try:
-        with httpx.Client(timeout=25) as client:
-            for _ in range(MAX_TOURS):
-                r = client.post(GROQ_URL, headers={"Authorization": f"Bearer {cle}"},
-                                json={"model": GROQ_MODEL, "messages": msgs, "tools": OUTILS,
-                                      "tool_choice": "auto", "temperature": 0.3, "max_tokens": 600})
-                r.raise_for_status()
-                msg = r.json()["choices"][0]["message"]
-                appels = msg.get("tool_calls") or []
-                if not appels:
-                    return (msg.get("content") or "").strip() or None, utilises
-                msgs.append({"role": "assistant", "content": msg.get("content") or "", "tool_calls": appels})
-                for a in appels:
-                    nom = a["function"]["name"]
-                    try:
-                        args = json.loads(a["function"].get("arguments") or "{}")
-                    except Exception:
-                        args = {}
-                    utilises.append(nom + (" (modèle ML)" if nom == "predire_rendement" else ""))
-                    msgs.append({"role": "tool", "tool_call_id": a["id"], "name": nom,
-                                 "content": _executer(nom, args, db, user)})
-    except Exception as exc:
-        print(f"[SmartAgri] LLM indisponible, repli sur l'agent à règles : {exc}")
+    with httpx.Client(timeout=25) as client:
+        for _ in range(MAX_TOURS):
+            r = client.post(url, headers={"Authorization": f"Bearer {cle}"},
+                            json={"model": modele, "messages": msgs, "tools": OUTILS,
+                                  "tool_choice": "auto", "temperature": 0.3, "max_tokens": 600})
+            r.raise_for_status()
+            msg = r.json()["choices"][0]["message"]
+            appels = msg.get("tool_calls") or []
+            if not appels:
+                return (msg.get("content") or "").strip() or None, utilises
+            msgs.append({"role": "assistant", "content": msg.get("content") or "", "tool_calls": appels})
+            for a in appels:
+                nom = a["function"]["name"]
+                try:
+                    args = json.loads(a["function"].get("arguments") or "{}")
+                except Exception:
+                    args = {}
+                utilises.append(nom + (" (modèle ML)" if nom == "predire_rendement" else ""))
+                msgs.append({"role": "tool", "tool_call_id": a["id"], "name": nom,
+                             "content": _executer(nom, args, db, user)})
+    return None, utilises
+
+
+def run_llm_agent(message: str, db: Session, user: User, history: List[dict]) -> Tuple[Optional[str], List[str]]:
+    """Essaie chaque fournisseur configuré (DeepSeek, Groq) ; (None, []) si aucun ne répond -> repli sur les règles."""
+    for nom, url, modele, cle in _fournisseurs():
+        try:
+            rep, outils = _boucle(nom, url, modele, cle, message, db, user, history)
+            if rep:
+                return rep, outils
+        except Exception as exc:
+            print(f"[SmartAgri] {nom} indisponible ({exc}) -> essai suivant / repli sur l'agent à règles")
     return None, []

@@ -211,3 +211,43 @@ def test_sols_d_une_ville_repond_sur_la_ville(client, auth):
     txt = r.json()["content"]
     assert r.status_code == 200 and "Man" in txt and "cultivables" in txt
     assert "Sol hydromorphe (bas-fonds)" not in txt            # pas la liste générale des sols
+
+
+def test_deepseek_utilise_son_url_et_groq_en_secours(client, auth, monkeypatch):
+    import llm_agent
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "cle-ds"); monkeypatch.setenv("GROQ_API_KEY", "cle-groq")
+    urls = []
+    class Client:
+        def __init__(self, *a, **k): pass
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def post(self, url, headers=None, json=None):
+            urls.append(url)
+            if "deepseek" in url:
+                raise RuntimeError("402 solde insuffisant")      # DeepSeek en échec -> bascule sur Groq
+            return _Rep({"choices": [{"message": {"content": "Bonjour ! Réponse de secours."}}]})
+    monkeypatch.setattr(llm_agent.httpx, "Client", Client)
+    r = client.post("/api/agribot/message", json={"content": "Parlez-moi de la saison des pluies"}, headers=auth)
+    assert r.status_code == 200 and "secours" in r.json()["content"]
+    assert "deepseek" in urls[0] and "groq" in urls[-1]
+
+
+def test_claude_outils_format_anthropic(client, auth, monkeypatch):
+    import llm_agent
+    for v in ("DEEPSEEK_API_KEY", "GROQ_API_KEY"): monkeypatch.delenv(v, raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "cle-test")
+    corps = []
+    class Client:
+        def __init__(self, *a, **k): pass
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def post(self, url, headers=None, json=None):
+            corps.append((url, headers, json))
+            if len(corps) == 1:
+                return _Rep({"content": [{"type": "tool_use", "id": "t1", "name": "sols_de_la_ville", "input": {"ville": "Man"}}]})
+            return _Rep({"content": [{"type": "text", "text": "Bonjour ! Les sols de Man sont cultivables."}]})
+    monkeypatch.setattr(llm_agent.httpx, "Client", Client)
+    r = client.post("/api/agribot/message", json={"content": "Parlez-moi des terres de Man"}, headers=auth)
+    assert r.status_code == 200 and "cultivables" in r.json()["content"] and "sols_de_la_ville" in r.json()["content"]
+    assert corps[0][0].startswith("https://api.anthropic.com") and "x-api-key" in corps[0][1]
+    assert corps[1][2]["messages"][-1]["content"][0]["type"] == "tool_result"
