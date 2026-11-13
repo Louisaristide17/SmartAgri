@@ -153,11 +153,14 @@ document.getElementById('register-form')?.addEventListener('submit', async (e) =
 
   setLoading('btn-register', true);
   try {
-    const data = await ApiAuth.register({ firstname: fn, lastname: ln, email, phone, role, password: pwd });
-    Auth.setToken(data.access_token);
-    Auth.setUser(data.user);
-    showAlert('register-alert', '✅ Compte créé ! Redirection...', 'success');
-    setTimeout(() => goToApp('web'), 1500);
+    await ApiAuth.register({ firstname: fn, lastname: ln, email, phone, role, password: pwd });
+    // Pas de connexion automatique : on revient à l'écran de connexion (comme pour tout accès)
+    Auth.removeToken(); Auth.removeUser();
+    document.getElementById('register-form').reset();
+    showTab('login');
+    const le = document.getElementById('l-email'); if (le) le.value = email;
+    showAlert('login-alert', '✅ Compte créé avec succès ! Connectez-vous avec votre e-mail et votre mot de passe.', 'success');
+    document.getElementById('l-pwd')?.focus();
   } catch (err) {
     showAlert('register-alert', '❌ ' + err.message);
   } finally {
