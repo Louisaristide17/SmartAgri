@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    SmartAgri – Login Page Script
    Connecté au backend FastAPI via api.js
    ============================================================ */
@@ -206,7 +206,7 @@ function goToApp(platform) {
     a.click();
     a.remove();
     // Message de confirmation
-    showAlert('login-alert', '📥 Téléchargement de l\\'APK lancé. Installez-le sur votre téléphone Android (autorisez "Sources inconnues").', 'success');
+    showAlert('login-alert', '📥 Téléchargement de l\'APK lancé. Installez-le sur votre téléphone Android (autorisez "Sources inconnues").', 'success');
   }
 }
 
@@ -223,3 +223,4 @@ window.addEventListener('DOMContentLoaded', () => {
     if (emailInput) emailInput.value = user.email;
   }
 });
+
