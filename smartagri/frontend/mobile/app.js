@@ -12,6 +12,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.location.href = '../login/index.html';
     return;
   }
+  try { await request('GET', '/api/auth/me'); }          // jeton invalide ou expiré -> retour à la connexion
+  catch (e) { if (!Auth.isLoggedIn()) return; }          // (request() déconnecte seule sur 401)
 
   // Splash → app après 1.6s (durée de la barre)
   await sleep(1700);

@@ -1,7 +1,7 @@
 /* ============================================================
    SmartAgri — Service Worker (PWA offline)
    ============================================================ */
-const CACHE_NAME   = 'smartagri-v2.1-gps';
+const CACHE_NAME   = 'smartagri-v2.2-session';
 const CACHE_ASSETS = [
   './',
   './index.html',

@@ -257,9 +257,17 @@ function initTopbar() {
 
 /** Vérifier l'authentification — rediriger si non connecté */
 function requireAuth() {
-  if (!Auth.isLoggedIn()) {
-    Auth.logout();
-  }
+  // La page reste invisible tant que la session n'est pas vérifiée auprès de l'API :
+  // un jeton absent, expiré ou invalide ramène à la page de connexion.
+  document.documentElement.style.visibility = 'hidden';
+  if (!Auth.isLoggedIn()) { Auth.logout(); return; }
+  const reveal = () => { document.documentElement.style.visibility = ''; };
+  request('GET', '/api/auth/me')
+    .then(u => { if (u && u.email) Auth.setUser(u); reveal(); })
+    .catch(e => {
+      // 401 : request() a déjà déconnecté. Autre erreur (serveur qui se réveille) : on affiche la page.
+      if (Auth.isLoggedIn()) reveal();
+    });
 }
 
 /** Marquer le lien actif dans la sidebar */

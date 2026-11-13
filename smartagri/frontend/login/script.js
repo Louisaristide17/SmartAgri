@@ -211,15 +211,29 @@ function goToApp(platform) {
 }
 
 /* ── Pré-remplir email mémorisé ── */
-window.addEventListener('DOMContentLoaded', () => {
-  // Si déjà connecté → rediriger directement
-  if (Auth.isLoggedIn()) {
-    window.location.href = '../app/pages/dashboard.html';
-    return;
-  }
+window.addEventListener('DOMContentLoaded', async () => {
   const user = Auth.getUser();
   if (user?.email) {
     const emailInput = document.getElementById('l-email');
     if (emailInput) emailInput.value = user.email;
   }
+  // La page de connexion s'affiche toujours : on ne saute plus directement dans l'application.
+  // Si une session valide existe déjà, on propose de la poursuivre.
+  if (!Auth.isLoggedIn()) return;
+  try {
+    const me = await request('GET', '/api/auth/me');
+    const box = document.createElement('div');
+    box.className = 'form-alert success';
+    box.style.cssText = 'display:block;margin-bottom:14px;';
+    box.innerHTML = `Session ouverte : <strong>${me.firstname || me.email}</strong> ` +
+      `<button type="button" id="btn-continue" style="margin-left:8px;cursor:pointer">Continuer</button> ` +
+      `<button type="button" id="btn-switch" style="margin-left:4px;cursor:pointer">Changer de compte</button>`;
+    const form = document.getElementById('login-form');
+    form.parentNode.insertBefore(box, form);
+    document.getElementById('btn-continue').onclick = () => { window.location.href = '../app/pages/dashboard.html'; };
+    document.getElementById('btn-switch').onclick = () => { Auth.removeToken(); Auth.removeUser(); box.remove(); };
+  } catch (e) {
+    Auth.removeToken(); Auth.removeUser();   // jeton périmé : on repart de zéro
+  }
 });
+
