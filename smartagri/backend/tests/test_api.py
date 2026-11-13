@@ -278,3 +278,9 @@ def test_sol_d_une_ville_pour_une_culture_meme_avec_faute(client, auth):
     assert "Sol hydromorphe (bas-fonds)" not in txt
     r = client.post("/api/agribot/message", json={"content": "le sol de Daloa convient-il au cacao ?"}, headers=auth)
     assert "très bien adaptée" in r.json()["content"] or "bien adaptée" in r.json()["content"]
+
+
+def test_question_sur_les_api(client, auth):
+    r = client.post("/api/agribot/message", json={"content": "connais tu un api ?"}, headers=auth)
+    txt = r.json()["content"]
+    assert r.status_code == 200 and "API SmartAgri" in txt and "reformuler" not in txt

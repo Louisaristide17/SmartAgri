@@ -213,6 +213,13 @@ def conversation_courante(message: str, user) -> Optional[str]:
                 "• indiquer les cultures adaptées à votre zone ;\n"
                 "• répondre à vos questions sur les engrais, maladies, semis et irrigation.\n\n"
                 "Que souhaitez-vous savoir ?")
+    if re.search(r"\b(api|intelligence artificielle|\bia\b|machine learning|modele|chatgpt|claude|deepseek|groq|technologie|comment tu fonctionnes|comment fonctionnes)\b", m):
+        return ("Avec plaisir ! 🤖 Je fonctionne grâce à l'**API SmartAgri** (développée avec FastAPI) : "
+                "elle me donne accès à vos parcelles et à vos prédictions, et au **modèle de machine learning** entraîné sur les cultures de la Côte d'Ivoire "
+                "pour estimer les rendements.\n\n"
+                "Pour comprendre et rédiger les réponses, je peux aussi m'appuyer sur un modèle de langage via une API externe (Claude, DeepSeek ou Groq), "
+                "quand l'administrateur de l'application l'a activé ; sinon, je réponds avec mes règles et ma base de connaissances agricoles.\n\n"
+                "Si vous le souhaitez, je peux vous aider sur vos cultures : rendement, sols, engrais, maladies, semis. Que souhaitez-vous savoir ?")
     return None
 
 
